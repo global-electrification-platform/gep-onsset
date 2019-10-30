@@ -18,8 +18,8 @@
       <file leaf-file-name="gep_runner.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gep_runner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="237">
-              <caret line="402" column="0" lean-forward="true" selection-start-line="402" selection-start-column="0" selection-end-line="409" selection-end-column="26" />
+            <state relative-caret-position="66">
+              <caret line="407" column="12" lean-forward="false" selection-start-line="407" selection-start-column="12" selection-end-line="407" selection-end-column="12" />
               <folding>
                 <element signature="e#155#164#0" expanded="true" />
               </folding>
@@ -30,10 +30,14 @@
       <file leaf-file-name="gep_onsset.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/gep_onsset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="262">
-              <caret line="1202" column="34" lean-forward="true" selection-start-line="1202" selection-start-column="34" selection-end-line="1202" selection-end-column="34" />
+            <state relative-caret-position="365">
+              <caret line="2072" column="63" lean-forward="false" selection-start-line="2072" selection-start-column="63" selection-end-line="2072" selection-end-column="76" />
               <folding>
                 <element signature="e#97#106#0" expanded="true" />
+                <element signature="e#142315#146652#0" expanded="false" />
+                <element signature="e#146762#150536#0" expanded="false" />
+                <element signature="e#150584#154915#0" expanded="false" />
+                <element signature="e#154963#155454#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -42,7 +46,7 @@
       <file leaf-file-name="SummaryAnalysis.py" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
+            <state relative-caret-position="176">
               <caret line="11" column="13" lean-forward="false" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
@@ -70,10 +74,15 @@
       <find>results_col</find>
       <find>determine current</find>
       <find>pre_elec</find>
+      <find>set_lcoe_grid</find>
+      <find>calculate_off</find>
+      <find>pre_electrifica</find>
+      <find>SET_ELEC_FUTURE_GRID</find>
     </findStrings>
     <replaceStrings>
       <replace>sheetname</replace>
       <replace>sheet_name</replace>
+      <replace>SET_ELEC_FUTURE_OFFGRID</replace>
     </replaceStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -81,8 +90,8 @@
       <list>
         <option value="$USER_HOME$/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/hrsl_clustering/HRSL_clustering.py" />
         <option value="$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py" />
-        <option value="$PROJECT_DIR$/gep_onsset.py" />
         <option value="$PROJECT_DIR$/gep_runner.py" />
+        <option value="$PROJECT_DIR$/gep_onsset.py" />
       </list>
     </option>
   </component>
@@ -107,6 +116,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
@@ -122,7 +132,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -136,12 +145,12 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="C:\Users\adm.esa\Anaconda3\envs\GEP_test\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="gep_onsset" />
+      <module name="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gep_runner.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -324,18 +333,18 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-9" y="-9" width="1938" height="1060" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24801692" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32960895" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32914925" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26145253" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.43351954" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.6156424" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -349,10 +358,86 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/gep_onsset.py</url>
+          <line>2305</line>
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="1" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/gep_runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#155#164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gep_onsset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26796">
+          <caret line="1218" column="57" lean-forward="false" selection-start-line="1218" selection-start-column="57" selection-end-line="1218" selection-end-column="57" />
+          <folding>
+            <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="176">
+          <caret line="11" column="13" lean-forward="false" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gep_runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8844">
+          <caret line="402" column="0" lean-forward="true" selection-start-line="402" selection-start-column="0" selection-end-line="409" selection-end-column="26" />
+          <folding>
+            <element signature="e#155#164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gep_onsset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="11" column="13" lean-forward="false" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/gep_runner.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -369,6 +454,10 @@
           <caret line="7" column="15" lean-forward="false" selection-start-line="7" selection-start-column="15" selection-end-line="7" selection-end-column="15" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -399,6 +488,10 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -429,6 +522,10 @@
           <caret line="1160" column="70" lean-forward="true" selection-start-line="1160" selection-start-column="70" selection-end-line="1160" selection-end-column="70" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -466,6 +563,10 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -486,6 +587,10 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -510,13 +615,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="473">
           <caret line="572" column="31" lean-forward="true" selection-start-line="572" selection-start-column="31" selection-end-line="572" selection-end-column="31" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
+        <state relative-caret-position="176">
           <caret line="11" column="13" lean-forward="false" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
@@ -526,8 +630,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gep_runner.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="237">
-          <caret line="402" column="0" lean-forward="true" selection-start-line="402" selection-start-column="0" selection-end-line="409" selection-end-column="26" />
+        <state relative-caret-position="66">
+          <caret line="407" column="12" lean-forward="false" selection-start-line="407" selection-start-column="12" selection-end-line="407" selection-end-column="12" />
           <folding>
             <element signature="e#155#164#0" expanded="true" />
           </folding>
@@ -536,10 +640,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gep_onsset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="262">
-          <caret line="1202" column="34" lean-forward="true" selection-start-line="1202" selection-start-column="34" selection-end-line="1202" selection-end-column="34" />
+        <state relative-caret-position="365">
+          <caret line="2072" column="63" lean-forward="false" selection-start-line="2072" selection-start-column="63" selection-end-line="2072" selection-end-column="76" />
           <folding>
             <element signature="e#97#106#0" expanded="true" />
+            <element signature="e#142315#146652#0" expanded="false" />
+            <element signature="e#146762#150536#0" expanded="false" />
+            <element signature="e#150584#154915#0" expanded="false" />
+            <element signature="e#154963#155454#0" expanded="false" />
           </folding>
         </state>
       </provider>
