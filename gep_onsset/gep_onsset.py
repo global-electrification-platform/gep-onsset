@@ -1429,17 +1429,17 @@ class SettlementProcessor:
         # Update electrification status based on already existing
         if (year - time_step) == start_year:
             self.df[SET_ELEC_FUTURE_GRID + "{}".format(year)] = 0
-            self.df.loc[
-                self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - time_step)] == 1, SET_ELEC_FUTURE_GRID + "{}".format(
-                    year)] = 1
+            # self.df.loc[
+            #     self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - time_step)] == 1, SET_ELEC_FUTURE_GRID + "{}".format(
+            #         year)] = 1
         else:
             self.df[SET_ELEC_FUTURE_GRID + "{}".format(year)] = 0
-            self.df.loc[
-                self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - time_step)] == 1, SET_ELEC_FUTURE_GRID + "{}".format(
-                    year)] = 1
-            self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1) & (
-                    self.df[SET_LIMIT + "{}".format(year - time_step)] == 1), SET_ELEC_FUTURE_GRID + "{}".format(
-                year)] = 1
+            # self.df.loc[
+            #     self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - time_step)] == 1, SET_ELEC_FUTURE_GRID + "{}".format(
+            #         year)] = 1
+            # self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1) & (
+            #         self.df[SET_LIMIT + "{}".format(year - time_step)] == 1), SET_ELEC_FUTURE_GRID + "{}".format(
+            #     year)] = 1
 
         if (year - time_step) == start_year:
             self.df[SET_ELEC_FUTURE_OFFGRID + "{}".format(year)] = 0
@@ -2165,6 +2165,7 @@ class SettlementProcessor:
         Once the grid extension algorithm has been run, determine the minimum overall option, and calculate the
         capacity and investment requirements for each settlement
         """
+        self.df[SET_LCOE_GRID + "{}".format(year)] = 99
 
         logging.info('Determine minimum overall')
         self.df[SET_MIN_OVERALL + "{}".format(year)] = self.df[[SET_LCOE_GRID + "{}".format(year),

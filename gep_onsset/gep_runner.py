@@ -44,7 +44,7 @@ if choice == 1:
         df.loc[df[SET_COUNTRY] == country].to_csv(base_dir + '.csv', index=False)
 
 elif choice == 2:
-    SpecsData = pd.read_excel(specs_path, sheetname='SpecsData')
+    SpecsData = pd.read_excel(specs_path, sheet_name='SpecsData')
     messagebox.showinfo('OnSSET', 'Open the file containing separated countries')
     base_dir = filedialog.askopenfilename()
     messagebox.showinfo('OnSSET', 'Browse to result folder and name the calibrated file')
@@ -131,10 +131,10 @@ elif choice == 3:
 
     print('\n --- Running scenario --- \n')
 
-    ScenarioInfo = pd.read_excel(specs_path, sheetname='ScenarioInfo')
+    ScenarioInfo = pd.read_excel(specs_path, sheet_name='ScenarioInfo')
     Scenarios = ScenarioInfo['Scenario']
-    ScenarioParameters = pd.read_excel(specs_path, sheetname='ScenarioParameters')
-    SpecsData = pd.read_excel(specs_path, sheetname='SpecsDataCalib')
+    ScenarioParameters = pd.read_excel(specs_path, sheet_name='ScenarioParameters')
+    SpecsData = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(SpecsData.loc[0, SPE_COUNTRY])
     for scenario in Scenarios:
         print('Scenario: ' + str(scenario + 1))
@@ -368,7 +368,7 @@ elif choice == 3:
         for row in range(0, total_rows):
             df_summary.loc[sumtechs[row]] = "Nan"
 
-        onsseter.current_mv_line_dist()
+        # onsseter.current_mv_line_dist()
 
         for year in yearsofanalysis:
             eleclimit = eleclimits[year]
@@ -407,8 +407,8 @@ elif choice == 3:
 
             onsseter.pre_electrification(grid_calc, grid_price, year, time_step, start_year)
 
-            onsseter.run_elec(grid_calc, max_grid_extension_dist, year, start_year, end_year, time_step,
-                              grid_cap_gen_limit, grid_connect_limit, auto_intensification, prioritization)
+            # onsseter.run_elec(grid_calc, max_grid_extension_dist, year, start_year, end_year, time_step,
+            #                   grid_cap_gen_limit, grid_connect_limit, auto_intensification, prioritization)
 
             onsseter.results_columns(mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                                      sa_diesel_calc, grid_calc, hybrid_1, hybrid_2, hybrid_3, hybrid_4,
