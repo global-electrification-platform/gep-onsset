@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e93a7d35-a972-4eb6-920b-c6aa8e928aaf" name="Default Changelist" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gep_onsset/gep_onsset.py" afterPath="$PROJECT_DIR$/gep_onsset/gep_onsset.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gep_onsset/gep_runner.py" afterPath="$PROJECT_DIR$/gep_onsset/gep_runner.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,11 +19,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="gep_onsset.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="gep_onsset.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gep_onsset/gep_onsset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="193">
-              <caret line="2675" column="20" lean-forward="true" selection-start-line="2675" selection-start-column="20" selection-end-line="2675" selection-end-column="20" />
+            <state relative-caret-position="210">
+              <caret line="1947" column="42" lean-forward="true" selection-start-line="1947" selection-start-column="42" selection-end-line="1947" selection-end-column="42" />
               <folding />
             </state>
           </provider>
@@ -30,8 +32,30 @@
       <file leaf-file-name="gep_runner.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gep_onsset/gep_runner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="401">
-              <caret line="146" column="31" lean-forward="false" selection-start-line="146" selection-start-column="31" selection-end-line="146" selection-end-column="31" />
+            <state relative-caret-position="85">
+              <caret line="17" column="28" lean-forward="false" selection-start-line="17" selection-start-column="28" selection-end-line="17" selection-end-column="28" />
+              <folding>
+                <element signature="e#155#164#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GEP_OnSSET.py" pinned="false" current-in-tab="true">
+        <entry file="file://$USER_HOME$/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/gep_onsset/GEP_OnSSET.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1923">
+              <caret line="1053" column="43" lean-forward="false" selection-start-line="1053" selection-start-column="31" selection-end-line="1053" selection-end-column="43" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SummaryAnalysis.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="19" lean-forward="true" selection-start-line="0" selection-start-column="19" selection-end-line="0" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -41,18 +65,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>max_nodes_per_serv_trans</find>
-      <find>MV_LV_sub_station_type</find>
-      <find>MV_LV_sub_station_cost</find>
-      <find>MV_MV_sub_station_cost</find>
-      <find>HV_LV_sub_station_type</find>
-      <find>HV_LV_sub_station_cost</find>
-      <find>HV_MV_sub_station_cost</find>
-      <find>power_factor</find>
-      <find>load_moment</find>
-      <find>further</find>
-      <find>elec_extension</find>
-      <find>def get_lcoe</find>
       <find>planned_td_dist</find>
       <find>pre_electrification</find>
       <find>pre_new_lines</find>
@@ -71,6 +83,18 @@
       <find>elec_current_</find>
       <find>apply_limitations</find>
       <find>elec_current</find>
+      <find>the electrification rate</find>
+      <find>pd.read</find>
+      <find>\</find>
+      <find>calibrate_elec</find>
+      <find>logging.info</find>
+      <find>five_year_targ</find>
+      <find>virtual</find>
+      <find>mv_line</find>
+      <find>fiveyearIndex</find>
+      <find>reproject</find>
+      <find>workspace + r'/Population_2015/pop2015_large.shp</find>
+      <find>centerpoints</find>
     </findStrings>
     <replaceStrings>
       <replace>self.HV_line_type</replace>
@@ -92,6 +116,8 @@
       <replace>self.power_factor</replace>
       <replace>self.load_moment</replace>
       <replace>sheetname</replace>
+      <replace>/</replace>
+      <replace># logging.info</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -105,8 +131,10 @@
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/docs/source/conf.py" />
         <option value="$PROJECT_DIR$/gep_onsset/__init__.py" />
-        <option value="$PROJECT_DIR$/gep_onsset/gep_runner.py" />
         <option value="$PROJECT_DIR$/gep_onsset/gep_onsset.py" />
+        <option value="$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py" />
+        <option value="$PROJECT_DIR$/gep_onsset/gep_runner.py" />
+        <option value="$USER_HOME$/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/gep_onsset/GEP_OnSSET.py" />
       </list>
     </option>
   </component>
@@ -167,6 +195,23 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="gep-onsset" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gep_onsset/gep_runner.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="SummaryAnalysis" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Desktop/GEP running folder" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="gep-onsset" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -373,16 +418,18 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
-    <list size="5">
+    <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.gep-onsset" />
       <item index="1" class="java.lang.String" itemvalue="Python.gep-runner" />
       <item index="2" class="java.lang.String" itemvalue="Python.gep_onsset" />
       <item index="3" class="java.lang.String" itemvalue="Python.gep_runner (1)" />
       <item index="4" class="java.lang.String" itemvalue="Python.gep_runner" />
+      <item index="5" class="java.lang.String" itemvalue="Python.SummaryAnalysis" />
     </list>
     <recent_temporary>
-      <list size="1">
+      <list size="2">
         <item index="0" class="java.lang.String" itemvalue="Python.gep_runner (1)" />
+        <item index="1" class="java.lang.String" itemvalue="Python.SummaryAnalysis" />
       </list>
     </recent_temporary>
   </component>
@@ -429,7 +476,15 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/gep_onsset/gep_onsset.py</url>
+          <line>1938</line>
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="1" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
@@ -445,7 +500,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#155#164#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -477,18 +534,44 @@
     <entry file="file:////ug.kth.se/dfs/home/a/s/asahl/appdata/xp.V2/Documents/Bolivia/onsset (2).py" />
     <entry file="file:////ug.kth.se/dfs/home/a/s/asahl/appdata/xp.V2/Documents/Bolivia/runner (2).py" />
     <entry file="file://P:/ITM/egi_esa/IEA_WEO_2017/WEO_codes_SEP/CSVmerger.py" />
-    <entry file="file://$PROJECT_DIR$/gep_onsset/gep_runner.py">
+    <entry file="file://$PROJECT_DIR$/gep_onsset/gep_onsset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="401">
-          <caret line="146" column="31" lean-forward="false" selection-start-line="146" selection-start-column="31" selection-end-line="146" selection-end-column="31" />
+        <state relative-caret-position="210">
+          <caret line="1947" column="42" lean-forward="true" selection-start-line="1947" selection-start-column="42" selection-end-line="1947" selection-end-column="42" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gep_onsset/gep_onsset.py">
+    <entry file="file://$USER_HOME$/Desktop/GEP running folder/SummaryAnalysis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="2675" column="20" lean-forward="true" selection-start-line="2675" selection-start-column="20" selection-end-line="2675" selection-end-column="20" />
+        <state relative-caret-position="0">
+          <caret line="0" column="19" lean-forward="true" selection-start-line="0" selection-start-column="19" selection-end-line="0" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/gep_onsset - Copy/GEP_OnSSET.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="326">
+          <caret line="1498" column="35" lean-forward="false" selection-start-line="1498" selection-start-column="35" selection-end-line="1498" selection-end-column="69" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gep_onsset/gep_runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="17" column="28" lean-forward="false" selection-start-line="17" selection-start-column="28" selection-end-line="17" selection-end-column="28" />
+          <folding>
+            <element signature="e#155#164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/gep_onsset/GEP_OnSSET.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1923">
+          <caret line="1053" column="43" lean-forward="false" selection-start-line="1053" selection-start-column="31" selection-end-line="1053" selection-end-column="43" />
           <folding />
         </state>
       </provider>
