@@ -1153,7 +1153,7 @@ class SettlementProcessor:
         return urban_modelled
 
     def elec_current_and_future(self, elec_actual, elec_actual_urban, elec_actual_rural, pop_tot, start_year,
-                                min_night_lights=0, min_pop=50, max_transformer_dist=2, max_mv_dist=2, max_hv_dist=5):
+                                min_night_lights=0, min_pop=250, max_transformer_dist=2, max_mv_dist=2, max_hv_dist=100):
         """
         Calibrate the current electrification status, and future 'pre-electrification' status
         """
@@ -1355,14 +1355,14 @@ class SettlementProcessor:
                                                                                               rural_elec_ratio-elec_actual_rural))
             condition = 1
 
-        self.df[SET_ELEC_FUTURE_GRID + "{}".format(start_year)] = \
+        self.df[SET_ELEC_FUTURE_OFFGRID + "{}".format(start_year)] = \
             self.df.apply(lambda row: 1 if row[SET_ELEC_CURRENT] == 1 else 0, axis=1)
-        self.df[SET_ELEC_FUTURE_OFFGRID + "{}".format(start_year)] = self.df.apply(lambda row: 0, axis=1)
+        self.df[SET_ELEC_FUTURE_GRID + "{}".format(start_year)] = self.df.apply(lambda row: 0, axis=1)
         self.df[SET_ELEC_FUTURE_ACTUAL + "{}".format(start_year)] = \
             self.df.apply(lambda row: 1 if row[SET_ELEC_FUTURE_GRID + "{}".format(start_year)] == 1 or
                                            row[SET_ELEC_FUTURE_OFFGRID + "{}".format(start_year)] == 1 else 0, axis=1)
         self.df[SET_ELEC_FINAL_CODE + "{}".format(start_year)] = \
-            self.df.apply(lambda row: 1 if row[SET_ELEC_CURRENT] == 1 else 99, axis=1)
+            self.df.apply(lambda row: 5 if row[SET_ELEC_CURRENT] == 1 else 99, axis=1)
 
         return elec_modelled, rural_elec_ratio, urban_elec_ratio
 
