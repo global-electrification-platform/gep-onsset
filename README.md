@@ -50,4 +50,4 @@ The use of GEP generator requires also installation of
 ## Contact
 For more information regarding the tool, its functionality and implementation please contact the development team at https://www.desa.kth.se.
 
-For any other inquiries and potential collaboration please refer to http://www.Globalelectrificationplatform.com.
+For any other inquiries and potential collaboration please refer to http://electrifynow.energydata.info
