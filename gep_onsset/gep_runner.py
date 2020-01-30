@@ -21,7 +21,7 @@ specs_path = filedialog.askopenfilename()
 # specs = pd.read_excel(specs_path, index_col=0)
 
 # RUN_PARAM: Insert the name of the country you are working on. More countries should be separated using comma e.g. ["Malawi", "Ghana"]
-countries = ['Country']
+countries = ['sb']
 # countries = str(input('countries: ')).split()
 # countries = specs.index.tolist() if 'all' in countries else countries
 

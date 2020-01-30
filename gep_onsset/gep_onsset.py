@@ -2072,7 +2072,7 @@ class SettlementProcessor:
                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
                                             grid_cell_area=row[SET_GRID_CELL_AREA],
                                             conf_status=row[SET_CONFLICT],
-                                            capacity_factor=row[SET_GHI] / HOURS_PER_YEAR) if 99 < row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)] < 3
+                                            capacity_factor=row[SET_GHI] / HOURS_PER_YEAR) if (7 < row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)] or row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)] < 4)
             else 99,
             axis=1)
 
