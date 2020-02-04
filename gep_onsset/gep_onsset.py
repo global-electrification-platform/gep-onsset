@@ -1069,7 +1069,6 @@ class SettlementProcessor:
         pop_ratio = pop_actual / self.df[SET_POP].sum()
         # And use this ratio to calibrate the population in a new column
         self.df[SET_POP_CALIB] = self.df.apply(lambda row: row[SET_POP] * pop_ratio, axis=1)
-        self.df[SET_ELEC_POP_CALIB] = self.df[SET_ELEC_POP] * pop_ratio
         if max(self.df[SET_URBAN]) == 3:  # THIS OPTION IS CURRENTLY DISABLED
             calibrate = True if 'n' in input(
                 'Use urban definition from GIS layer <y/n> (n=model calibration):') else False
@@ -1169,6 +1168,7 @@ class SettlementProcessor:
         factor = (total_pop * total_elec_ratio) / (urban_pop * urban_elec_ratio + rural_pop * rural_elec_ratio)
         urban_elec_ratio *= factor
         rural_elec_ratio *= factor
+        self.df[SET_ELEC_POP_CALIB] = self.df[SET_ELEC_POP] * self.df[SET_POP_CALIB].sum() / self.df[SET_POP].sum()
         self.df.loc[self.df[SET_NIGHT_LIGHTS] <= 0, [SET_ELEC_POP_CALIB]] = 0
 
         logging.info('Calibrate current electrification')

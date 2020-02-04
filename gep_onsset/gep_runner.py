@@ -211,7 +211,7 @@ elif choice == 3:
                                    capacity_factor=0.5,
                                    tech_life=30,
                                    capital_cost=3000,
-                                   om_costs=0.03)
+                                   om_costs=0.02)
 
         mg_wind_calc = Technology(om_of_td_lines=0.02,
                                   distribution_losses=0.05,
