@@ -497,8 +497,8 @@ class Technology:
                  hybrid_1=0, hybrid_2=0, hybrid_3=0, hybrid_4=0, hybrid_5=0, tier=0,
                  get_investment_cost=False,
                  get_investment_cost_lv=False, get_investment_cost_mv=False, get_investment_cost_hv=False,
-                 get_investment_cost_transformer=False, get_investment_cost_connection=False, mg_hybrid=False,
-                 get_capacity=False):
+                 get_investment_cost_transformer=False, get_investment_cost_connection=False, get_capacity_cost=False,
+                 mg_hybrid=False, get_capacity=False):
         """
         Calculates the LCOE depending on the parameters. Optionally calculates the investment cost instead.
 
@@ -674,10 +674,8 @@ class Technology:
         conf_grid_pen = {0: 1, 1: 1.1, 2: 1.25, 3: 1.5, 4: 2}
         # The investment and O&M costs are different for grid and non-grid solutions
         if self.grid_price > 0:
-            td_investment_cost = (hv_lines_total_length * self.HV_line_cost * (
-                    1 + self.existing_grid_cost_ratio * elec_loop) +
-                                  mv_lines_connection_length * self.MV_line_cost * (
-                                          1 + self.existing_grid_cost_ratio * elec_loop) +
+            td_investment_cost = (hv_lines_total_length * self.HV_line_cost * (1 + self.existing_grid_cost_ratio * elec_loop) +
+                                  mv_lines_connection_length * self.MV_line_cost * (1 + self.existing_grid_cost_ratio * elec_loop) +
                                   total_lv_lines_length * self.LV_line_cost +
                                   mv_lines_distribution_length * self.MV_line_cost +
                                   num_transformers * self.service_Transf_cost +
@@ -770,6 +768,7 @@ class Technology:
         project_life = end_year - self.base_year + 1
         reinvest_year = 0
         step = start_year - self.base_year
+
         # If the technology life is less than the project life, we will have to invest twice to buy it again
         if self.tech_life + step < project_life:
             reinvest_year = self.tech_life + step
@@ -799,26 +798,29 @@ class Technology:
 
         # So we also return the total investment cost for this number of people
         if get_investment_cost:
-            discounted_investments = investments / discount_factor
+            discounted_investments = np.sum(investments) / discount_factor[step]
             if mg_hybrid:
-                return add_investments + np.sum(discounted_investments)
+                return add_investments + discounted_investments
             else:
-                return np.sum(discounted_investments) + self.grid_capacity_investment * peak_load / discount_factor[step]
+                return discounted_investments + self.grid_capacity_investment * peak_load / discount_factor[step]
+        elif get_capacity_cost:
+            return capital_investment / discount_factor[step] if self.grid_capacity_investment == 0 else \
+                self.grid_capacity_investment * peak_load / discount_factor[step]
         elif get_investment_cost_lv:
-            return total_lv_lines_length * (self.LV_line_cost * conf_grid_pen[conf_status])
+            return (total_lv_lines_length * (self.LV_line_cost * conf_grid_pen[conf_status])) / discount_factor[step]
         elif get_investment_cost_mv:
             return (mv_lines_connection_length * self.MV_line_cost * (1 + self.existing_grid_cost_ratio * elec_loop) +
-                    mv_lines_distribution_length * self.MV_line_cost) * conf_grid_pen[conf_status]
+                    mv_lines_distribution_length * self.MV_line_cost) * conf_grid_pen[conf_status] / discount_factor[step]
         elif get_investment_cost_hv:
-            return hv_lines_total_length * (self.HV_line_cost * conf_grid_pen[conf_status]) * \
-                   (1 + self.existing_grid_cost_ratio * elec_loop)
+            return (hv_lines_total_length * (self.HV_line_cost * conf_grid_pen[conf_status]) * \
+                   (1 + self.existing_grid_cost_ratio * elec_loop)) / discount_factor[step]
         elif get_investment_cost_transformer:
-            return (No_of_HV_LV_substation * self.HV_LV_sub_station_cost +
+            return 0 if self.standalone else (No_of_HV_LV_substation * self.HV_LV_sub_station_cost +
                     No_of_HV_MV_substation * self.HV_MV_sub_station_cost +
                     No_of_MV_MV_substation * self.MV_MV_sub_station_cost +
-                    No_of_MV_LV_substation * self.MV_LV_sub_station_cost) * conf_grid_pen[conf_status]
+                    No_of_MV_LV_substation * self.MV_LV_sub_station_cost) * conf_grid_pen[conf_status] / discount_factor[step]
         elif get_investment_cost_connection:
-            return total_nodes * self.connection_cost_per_hh
+            return total_nodes * self.connection_cost_per_hh / discount_factor[step]
         elif get_capacity:
             return add_capacity
         else:
@@ -2215,12 +2217,14 @@ class SettlementProcessor:
     def calculate_investments(self, mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                               sa_diesel_calc, grid_calc, hybrid_1, hybrid_2, hybrid_3, hybrid_4, hybrid_5, year,
                               end_year, timestep):
+
+        # This is the main function to calculate total investment cost but skews intermediate years (need to be checked more)
         def res_investment_cost(row):
             min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year - timestep,
+                                               start_year=year,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2234,7 +2238,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year - timestep,
+                                           start_year=year,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2248,7 +2252,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year - timestep,
+                                             start_year=year,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2262,7 +2266,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year - timestep,
+                                               start_year=year,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2276,7 +2280,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year - timestep,
+                                           start_year=year,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2290,7 +2294,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year - timestep,
+                                              start_year=year,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2304,7 +2308,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
+                                          start_year=year,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2322,7 +2326,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year - timestep,
+                #                               start_year=year,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2342,8 +2346,799 @@ class SettlementProcessor:
             else:
                 return 0
 
-        logging.info('Calculate investment cost')
+        # This is a second potential option but not used at the moment
+        def res_investment_cost_2(row):
+            return (row['InvestmentCostLV' + "{}".format(year)] +
+                    row['InvestmentCostMV' + "{}".format(year)] +
+                    row['InvestmentCostHV' + "{}".format(year)] +
+                    row['InvestmentCostTransformer' + "{}".format(year)] +
+                    row['InvestmentCostConnection' + "{}".format(year)])
+
+        def lv_investment_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_lv=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_lv=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_investment_cost_lv=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_lv=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_lv=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_investment_cost_lv=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_investment_cost_lv=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_investment_cost_lv=True)
+            else:
+                return 0
+
+        def mv_investment_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_mv=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_mv=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_investment_cost_mv=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_mv=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_mv=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_investment_cost_mv=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_investment_cost_mv=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_investment_cost_mv=True)
+            else:
+                return 0
+
+        def hv_investment_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_hv=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_hv=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_investment_cost_hv=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_hv=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_hv=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_investment_cost_hv=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_investment_cost_hv=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_investment_cost_hv=True)
+            else:
+                return 0
+
+        def transformer_investment_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_transformer=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_transformer=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_investment_cost_transformer=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_transformer=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_transformer=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_investment_cost_transformer=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_investment_cost_transformer=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_investment_cost_transformer=True)
+            else:
+                return 0
+
+        def connection_investment_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_connection=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_connection=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_investment_cost_connection=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_investment_cost_connection=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_investment_cost_connection=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_investment_cost_connection=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_investment_cost_connection =True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_investment_cost_connection = True)
+            else:
+                return 0
+
+        def capital_capacity_cost(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_capacity_cost=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_capacity_cost=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_capacity_cost=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_capacity_cost=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_capacity_cost=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_capacity_cost=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_capacity_cost=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_capacity_cost = True)
+            else:
+                return 0
+
+        logging.info('Calculate total discounted investment cost')
         self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
+
+        logging.info('Calculate LV discounted investment cost')
+        self.df["InvestmentCostLV" + "{}".format(year)] = self.df.apply(lv_investment_cost, axis=1)
+
+        logging.info('Calculate MV discounted investment cost')
+        self.df["InvestmentCostMV" + "{}".format(year)] = self.df.apply(mv_investment_cost, axis=1)
+
+        logging.info('Calculate HV discounted investment cost')
+        self.df["InvestmentCostHV" + "{}".format(year)] = self.df.apply(hv_investment_cost, axis=1)
+
+        logging.info('Calculate transformer discounted investment cost')
+        self.df["InvestmentCostTransformer" + "{}".format(year)]= self.df.apply(transformer_investment_cost, axis=1)
+
+        logging.info('Calculate connection discounted investment cost')
+        self.df["InvestmentCostConnection" + "{}".format(year)] = self.df.apply(connection_investment_cost, axis=1)
+
+        logging.info('Calculating discounted capital investment')
+        self.df['CapitalCapacityInvestment' + "{}".format(year)] = self.df.apply(capital_capacity_cost, axis=1)
+
+        # logging.info('Calculate total discounted investment cost')
+        # self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost_2, axis=1)
 
     def apply_limitations(self, eleclimit, year, timestep, prioritization, auto_densification=0):
 
@@ -2878,131 +3673,8 @@ class SettlementProcessor:
             else:
                 return 0
 
-            logging.info('Calculate investment cost')
-            self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
-
-        def res_investment_cost_lv(row):
-            min_code = row[SET_ELEC_FINAL_CODE + "{}".format(year)]
-            if min_code == 1:
-                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
-                                          end_year=end_year,
-                                          people=row[SET_POP + "{}".format(year)],
-                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
-                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
-                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
-                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
-                                          grid_cell_area=row[SET_GRID_CELL_AREA],
-                                          conf_status=row[SET_CONFLICT],
-                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
-                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
-                                          get_investment_cost_lv=True)
-            else:
-                return 0
-
-        # logging.info('Calculate LV investment cost')
-        # self.df['InvestmentCostLV' + "{}".format(year)] = self.df.apply(res_investment_cost_lv, axis=1)
-
-        def res_investment_cost_mv(row):
-            min_code = row[SET_ELEC_FINAL_CODE + "{}".format(year)]
-            if min_code == 1:
-                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
-                                          end_year=end_year,
-                                          people=row[SET_POP + "{}".format(year)],
-                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
-                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
-                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
-                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
-                                          grid_cell_area=row[SET_GRID_CELL_AREA],
-                                          conf_status=row[SET_CONFLICT],
-                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
-                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
-                                          get_investment_cost_mv=True)
-            else:
-                return 0
-
-        # logging.info('Calculate MV investment cost')
-        # self.df['InvestmentCostMV' + "{}".format(year)] = self.df.apply(res_investment_cost_mv, axis=1)
-
-        def res_investment_cost_hv(row):
-            min_code = row[SET_ELEC_FINAL_CODE + "{}".format(year)]
-            if min_code == 1:
-                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
-                                          end_year=end_year,
-                                          people=row[SET_POP + "{}".format(year)],
-                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
-                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
-                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
-                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
-                                          grid_cell_area=row[SET_GRID_CELL_AREA],
-                                          conf_status=row[SET_CONFLICT],
-                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
-                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
-                                          get_investment_cost_hv=True)
-            else:
-                return 0
-
-        # logging.info('Calculate HV investment cost')
-        # self.df['InvestmentCostHV' + "{}".format(year)] = self.df.apply(res_investment_cost_hv, axis=1)
-
-        def res_investment_cost_transformer(row):
-            min_code = row[SET_ELEC_FINAL_CODE + "{}".format(year)]
-            if min_code == 1:
-                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
-                                          end_year=end_year,
-                                          people=row[SET_POP + "{}".format(year)],
-                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
-                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
-                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
-                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
-                                          grid_cell_area=row[SET_GRID_CELL_AREA],
-                                          conf_status=row[SET_CONFLICT],
-                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
-                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
-                                          get_investment_cost_transformer=True)
-            else:
-                return 0
-
-        # logging.info('Calculate transformer investment cost')
-        # self.df['InvestmentCostTransformer' + "{}".format(year)] = self.df.apply(res_investment_cost_transformer, axis=1)
-
-        def res_investment_cost_connection(row):
-            min_code = row[SET_ELEC_FINAL_CODE + "{}".format(year)]
-            if min_code == 1:
-                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year - timestep,
-                                          end_year=end_year,
-                                          people=row[SET_POP + "{}".format(year)],
-                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
-                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
-                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
-                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
-                                          grid_cell_area=row[SET_GRID_CELL_AREA],
-                                          conf_status=row[SET_CONFLICT],
-                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
-                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
-                                          get_investment_cost_connection=True)
-            else:
-                return 0
-
-        # logging.info('Calculate connection investment cost')
-        #  self.df['InvestmentCostConnection' + "{}".format(year)] = self.df.apply(res_investment_cost_connection, axis=1)
-
-        def infrastructure_cost(row):
-            if row[SET_NEW_CONNECTIONS + "{}".format(year)] > 0 and row[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1:
-                return (row['InvestmentCostLV' + "{}".format(year)]
-                        + row['InvestmentCostMV' + "{}".format(year)] + row['InvestmentCostHV' + "{}".format(year)]
-                        + row['InvestmentCostTransformer' + "{}".format(year)] +
-                        row['InvestmentCostConnection' + "{}".format(year)]) / (
-                               row[SET_NEW_CONNECTIONS + "{}".format(year)] / row[SET_NUM_PEOPLE_PER_HH])
-            else:
-                return 0
-
-        # logging.info('Calculating average infrastructure cost for grid connection')
-        # self.df['InfrastructureCapitaCost' + "{}".format(year)] = self.df.apply(infrastructure_cost, axis=1)
+            # logging.info('Calculate investment cost')
+            # self.df["invest_old" + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
 
     def delete_redundant_columns(self, year):
         self.df.fillna(0)
