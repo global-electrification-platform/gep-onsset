@@ -2216,7 +2216,7 @@ class SettlementProcessor:
 
     def calculate_investments(self, mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                               sa_diesel_calc, grid_calc, hybrid_1, hybrid_2, hybrid_3, hybrid_4, hybrid_5, year,
-                              end_year, timestep):
+                              end_year, timestep, cost_choice):
 
         # This is the main function to calculate total investment cost but skews intermediate years (need to be checked more)
         def res_investment_cost(row):
@@ -2224,7 +2224,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2238,7 +2238,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2252,7 +2252,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2266,7 +2266,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2280,7 +2280,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2294,7 +2294,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2308,7 +2308,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2326,7 +2326,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2359,7 +2359,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2373,7 +2373,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2387,7 +2387,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2401,7 +2401,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2415,7 +2415,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2429,7 +2429,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2443,7 +2443,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2461,7 +2461,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2486,7 +2486,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2500,7 +2500,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2514,7 +2514,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2528,7 +2528,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2542,7 +2542,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2556,7 +2556,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2570,7 +2570,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2588,7 +2588,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2613,7 +2613,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2627,7 +2627,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2641,7 +2641,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2655,7 +2655,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2669,7 +2669,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2683,7 +2683,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2697,7 +2697,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2715,7 +2715,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2740,7 +2740,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2754,7 +2754,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2768,7 +2768,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2782,7 +2782,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2796,7 +2796,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2810,7 +2810,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2824,7 +2824,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2842,7 +2842,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2867,7 +2867,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2881,7 +2881,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2895,7 +2895,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2909,7 +2909,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2923,7 +2923,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2937,7 +2937,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2951,7 +2951,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2969,7 +2969,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -2994,7 +2994,7 @@ class SettlementProcessor:
 
             if min_code == 2:
                 return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3008,7 +3008,7 @@ class SettlementProcessor:
 
             elif min_code == 3:
                 return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3022,7 +3022,7 @@ class SettlementProcessor:
 
             elif min_code == 6:
                 return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                             start_year=year,
+                                             start_year=year - timestep,
                                              end_year=end_year,
                                              people=row[SET_POP + "{}".format(year)],
                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3036,7 +3036,7 @@ class SettlementProcessor:
 
             elif min_code == 4:
                 return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                               start_year=year,
+                                               start_year=year - timestep,
                                                end_year=end_year,
                                                people=row[SET_POP + "{}".format(year)],
                                                new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3050,7 +3050,7 @@ class SettlementProcessor:
 
             elif min_code == 5:
                 return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                           start_year=year,
+                                           start_year=year - timestep,
                                            end_year=end_year,
                                            people=row[SET_POP + "{}".format(year)],
                                            new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3064,7 +3064,7 @@ class SettlementProcessor:
 
             elif min_code == 7:
                 return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                              start_year=year,
+                                              start_year=year - timestep,
                                               end_year=end_year,
                                               people=row[SET_POP + "{}".format(year)],
                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3078,7 +3078,7 @@ class SettlementProcessor:
 
             elif min_code == 1:
                 return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
-                                          start_year=year,
+                                          start_year=year - timestep,
                                           end_year=end_year,
                                           people=row[SET_POP + "{}".format(year)],
                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3096,7 +3096,7 @@ class SettlementProcessor:
                 #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
                 #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
                 #                               conf_status=row[SET_CONFLICT],
-                #                               start_year=year,
+                #                               start_year=year - timestep,
                 #                               end_year=end_year,
                 #                               people=row[SET_POP + "{}".format(year)],
                 #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
@@ -3116,29 +3116,33 @@ class SettlementProcessor:
             else:
                 return 0
 
-        logging.info('Calculate total discounted investment cost')
-        self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
+        if cost_choice == 2:
+            logging.info('Calculate total discounted investment cost')
+            self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
+        else:
 
-        logging.info('Calculate LV discounted investment cost')
-        self.df["InvestmentCostLV" + "{}".format(year)] = self.df.apply(lv_investment_cost, axis=1)
+            logging.info('Calculate total discounted investment cost')
+            self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
+            logging.info('Calculate LV discounted investment cost')
+            self.df["InvestmentCostLV" + "{}".format(year)] = self.df.apply(lv_investment_cost, axis=1)
 
-        logging.info('Calculate MV discounted investment cost')
-        self.df["InvestmentCostMV" + "{}".format(year)] = self.df.apply(mv_investment_cost, axis=1)
+            logging.info('Calculate MV discounted investment cost')
+            self.df["InvestmentCostMV" + "{}".format(year)] = self.df.apply(mv_investment_cost, axis=1)
 
-        logging.info('Calculate HV discounted investment cost')
-        self.df["InvestmentCostHV" + "{}".format(year)] = self.df.apply(hv_investment_cost, axis=1)
+            logging.info('Calculate HV discounted investment cost')
+            self.df["InvestmentCostHV" + "{}".format(year)] = self.df.apply(hv_investment_cost, axis=1)
 
-        logging.info('Calculate transformer discounted investment cost')
-        self.df["InvestmentCostTransformer" + "{}".format(year)]= self.df.apply(transformer_investment_cost, axis=1)
+            logging.info('Calculate transformer discounted investment cost')
+            self.df["InvestmentCostTransformer" + "{}".format(year)]= self.df.apply(transformer_investment_cost, axis=1)
 
-        logging.info('Calculate connection discounted investment cost')
-        self.df["InvestmentCostConnection" + "{}".format(year)] = self.df.apply(connection_investment_cost, axis=1)
+            logging.info('Calculate connection discounted investment cost')
+            self.df["InvestmentCostConnection" + "{}".format(year)] = self.df.apply(connection_investment_cost, axis=1)
 
-        logging.info('Calculating discounted capital investment')
-        self.df['CapitalCapacityInvestment' + "{}".format(year)] = self.df.apply(capital_capacity_cost, axis=1)
+            logging.info('Calculating discounted capital investment')
+            self.df['CapitalCapacityInvestment' + "{}".format(year)] = self.df.apply(capital_capacity_cost, axis=1)
 
-        # logging.info('Calculate total discounted investment cost')
-        # self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost_2, axis=1)
+            # logging.info('Calculate total discounted investment cost')
+            # self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost_2, axis=1)
 
     def apply_limitations(self, eleclimit, year, timestep, prioritization, auto_densification=0):
 
@@ -3706,7 +3710,7 @@ class SettlementProcessor:
         del self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
         del self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
 
-    def calc_summaries(self, df_summary, sumtechs, year):
+    def calc_summaries(self, df_summary, sumtechs, year, cost_choice):
 
         """The next section calculates the summaries for technology split, 
         consumption added and total investment cost"""
@@ -3849,15 +3853,128 @@ class SettlementProcessor:
                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                              [SET_INVESTMENT_COST + "{}".format(year)])
 
-        df_summary[year][sumtechs[32]] = min(self.df[SET_POP + "{}".format(year)])
-        df_summary[year][sumtechs[33]] = max(self.df[SET_POP + "{}".format(year)])
-        df_summary[year][sumtechs[34]] = min(self.df[SET_GRID_CELL_AREA])
-        df_summary[year][sumtechs[35]] = max(self.df[SET_GRID_CELL_AREA])
-        df_summary[year][sumtechs[36]] = min(self.df['CurrentMVLineDist'])
-        df_summary[year][sumtechs[37]] = max(self.df['CurrentMVLineDist'])
-        df_summary[year][sumtechs[38]] = min(self.df[SET_ROAD_DIST])
-        df_summary[year][sumtechs[39]] = max(self.df[SET_ROAD_DIST])
-        df_summary[year][sumtechs[40]] = min(
+        sum_index = 32
+
+        if cost_choice == 1:
+
+            # Cost break down summaries for Grid
+            df_summary[year][sumtechs[sum_index]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["InvestmentCostLV" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index+1]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["InvestmentCostMV" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index+2]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["InvestmentCostHV" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index+3]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["InvestmentCostTransformer" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index + 4]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["InvestmentCostConnection" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index + 5]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["CapitalCapacityInvestment" + "{}".format(year)])
+
+            # Cost break down summaries for MG
+            df_summary[year][sumtechs[sum_index+6]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                          ["InvestmentCostLV" + "{}".format(year)]) + \
+                                                      sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                          ["InvestmentCostLV" + "{}".format(year)]) + \
+                                                      sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                    (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                          ["InvestmentCostLV" + "{}".format(year)]) + \
+                                                      sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                      (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                          ["InvestmentCostLV" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 7]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostMV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostMV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostMV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostMV" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 8]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 9]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 10]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["InvestmentCostConnection" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["InvestmentCostConnection" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["InvestmentCostConnection" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["InvestmentCostConnection" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 11]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 12]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 3) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1) & (
+                                                                                 self.df[SET_POP + "{}".format(year)] > 0)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)]) +\
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 2) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["CapitalCapacityInvestment" + "{}".format(year)])
+
+            sum_index = sum_index + 13
+
+        df_summary[year][sumtechs[sum_index]] = min(self.df[SET_POP + "{}".format(year)])
+        df_summary[year][sumtechs[sum_index+1]] = max(self.df[SET_POP + "{}".format(year)])
+        df_summary[year][sumtechs[sum_index+2]] = min(self.df[SET_GRID_CELL_AREA])
+        df_summary[year][sumtechs[sum_index+3]] = max(self.df[SET_GRID_CELL_AREA])
+        df_summary[year][sumtechs[sum_index+4]] = min(self.df['CurrentMVLineDist'])
+        df_summary[year][sumtechs[sum_index+5]] = max(self.df['CurrentMVLineDist'])
+        df_summary[year][sumtechs[sum_index+6]] = min(self.df[SET_ROAD_DIST])
+        df_summary[year][sumtechs[sum_index+7]] = max(self.df[SET_ROAD_DIST])
+        df_summary[year][sumtechs[sum_index+8]] = min(
             (self.df[SET_INVESTMENT_COST + "{}".format(year)]) / (self.df[SET_NEW_CONNECTIONS + "{}".format(year)]))
-        df_summary[year][sumtechs[41]] = max(
+        df_summary[year][sumtechs[sum_index+9]] = max(
             (self.df[SET_INVESTMENT_COST + "{}".format(year)]) / (self.df[SET_NEW_CONNECTIONS + "{}".format(year)]))
