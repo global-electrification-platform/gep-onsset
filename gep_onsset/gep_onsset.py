@@ -815,11 +815,16 @@ class Technology:
             return (hv_lines_total_length * (self.HV_line_cost * conf_grid_pen[conf_status]) * \
                    (1 + self.existing_grid_cost_ratio * elec_loop)) / discount_factor[step]
         elif get_investment_cost_transformer:
-            return 0 if self.standalone else (num_transformers * self.service_Transf_cost +
-                                              No_of_HV_LV_substation * self.HV_LV_sub_station_cost +
-                                              No_of_HV_MV_substation * self.HV_MV_sub_station_cost +
-                                              No_of_MV_MV_substation * self.MV_MV_sub_station_cost +
-                                              No_of_MV_LV_substation * self.MV_LV_sub_station_cost) * conf_grid_pen[conf_status] / discount_factor[step]
+            if self.standalone:
+                return 0
+            elif self.grid_price > 0:
+                return (num_transformers * self.service_Transf_cost + 
+                        No_of_HV_LV_substation * self.HV_LV_sub_station_cost +
+                        No_of_HV_MV_substation * self.HV_MV_sub_station_cost +
+                        No_of_MV_MV_substation * self.MV_MV_sub_station_cost +
+                        No_of_MV_LV_substation * self.MV_LV_sub_station_cost) * conf_grid_pen[conf_status] / discount_factor[step]
+            else:
+                return num_transformers * self.service_Transf_cost * conflict_mg_pen[conf_status] / discount_factor[step]
         elif get_investment_cost_connection:
             return total_nodes * self.connection_cost_per_hh / discount_factor[step]
         elif get_capacity:
