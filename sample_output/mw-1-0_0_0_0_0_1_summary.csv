@@ -37,13 +37,16 @@ InvestmentCostHV_Grid,945453.0831079559,774377.4608697564
 InvestmentCostTransformer_Grid,847014000.0,8040205.901514646
 InvestmentCostConnection_Grid,328121288.62470084,41761530.824922346
 CapitalCapacityInvestment_Grid,389045303.5493982,104612577.87535901
+ReccuringCosts_Grid,1247335085.3528328,146649478.1079107
 InvestmentCostLV_MG,0,0
 InvestmentCostMV_MG,0,0
 InvestmentCostHV_MG,0,0
 InvestmentCostTransformer_MG,0,0
 InvestmentCostConnection_MG,0,0
 CapitalCapacityInvestment_MG,0,0
+ReccuringCosts_MG,0,0
 CapitalCapacityInvestment_SA,0,264060364.047604
+ReccuringCosts_SA,0,26367536.599500068
 Min_cluster_pop_2030,0.005251876813192918,0.005973524303346302
 Max_cluster_pop_2030,1423995.4555459816,1808717.995455311
 Min_cluster_area,0.012,0.012

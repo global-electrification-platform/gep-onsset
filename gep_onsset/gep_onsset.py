@@ -1,5 +1,5 @@
-# Author: KTH dESA Last modified by Andreas Sahlberg
-# Date: 05 June 2019
+# Author: KTH dESA Last modified by Alexandros Korkovelos
+# Date: 13 July 2020
 # Python version: 3.5
 
 import os
@@ -498,7 +498,7 @@ class Technology:
                  get_investment_cost=False,
                  get_investment_cost_lv=False, get_investment_cost_mv=False, get_investment_cost_hv=False,
                  get_investment_cost_transformer=False, get_investment_cost_connection=False, get_capacity_cost=False,
-                 mg_hybrid=False, get_capacity=False):
+                 mg_hybrid=False, get_capacity=False, get_reccuring_costs=False):
         """
         Calculates the LCOE depending on the parameters. Optionally calculates the investment cost instead.
 
@@ -827,6 +827,8 @@ class Technology:
                 return num_transformers * self.service_Transf_cost * conflict_mg_pen[conf_status] / discount_factor[step]
         elif get_investment_cost_connection:
             return total_nodes * self.connection_cost_per_hh / discount_factor[step]
+        elif get_reccuring_costs:
+            return np.sum((operation_and_maintenance + fuel) / discount_factor)
         elif get_capacity:
             return add_capacity
         else:
@@ -3122,6 +3124,133 @@ class SettlementProcessor:
             else:
                 return 0
 
+        def reccuring_costs(row):
+            min_code = row[SET_MIN_OVERALL_CODE + "{}".format(year)]
+
+            if min_code == 2:
+                return sa_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year - timestep,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_reccuring_costs=True)
+
+            elif min_code == 3:
+                return sa_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year - timestep,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_reccuring_costs=True)
+
+            elif min_code == 6:
+                return mg_wind_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                             start_year=year - timestep,
+                                             end_year=end_year,
+                                             people=row[SET_POP + "{}".format(year)],
+                                             new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                             total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                             prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                             num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                             grid_cell_area=row[SET_GRID_CELL_AREA],
+                                             capacity_factor=row[SET_WINDCF],
+                                             conf_status=row[SET_CONFLICT],
+                                             get_reccuring_costs=True)
+
+            elif min_code == 4:
+                return mg_diesel_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                               start_year=year - timestep,
+                                               end_year=end_year,
+                                               people=row[SET_POP + "{}".format(year)],
+                                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                                               travel_hours=row[SET_TRAVEL_HOURS],
+                                               conf_status=row[SET_CONFLICT],
+                                               get_reccuring_costs=True)
+
+            elif min_code == 5:
+                return mg_pv_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                           start_year=year - timestep,
+                                           end_year=end_year,
+                                           people=row[SET_POP + "{}".format(year)],
+                                           new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                           total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                           prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                           num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                           grid_cell_area=row[SET_GRID_CELL_AREA],
+                                           capacity_factor=row[SET_GHI] / HOURS_PER_YEAR,
+                                           conf_status=row[SET_CONFLICT],
+                                           get_reccuring_costs=True)
+
+            elif min_code == 7:
+                return mg_hydro_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                              start_year=year - timestep,
+                                              end_year=end_year,
+                                              people=row[SET_POP + "{}".format(year)],
+                                              new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                              total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                              prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                              num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                              grid_cell_area=row[SET_GRID_CELL_AREA],
+                                              conf_status=row[SET_CONFLICT],
+                                              mv_line_length=row[SET_HYDRO_DIST],
+                                              get_reccuring_costs=True)
+
+            elif min_code == 1:
+                return grid_calc.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                                          start_year=year - timestep,
+                                          end_year=end_year,
+                                          people=row[SET_POP + "{}".format(year)],
+                                          new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                                          total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                                          prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                                          num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                                          grid_cell_area=row[SET_GRID_CELL_AREA],
+                                          conf_status=row[SET_CONFLICT],
+                                          additional_mv_line_length=row[SET_MIN_GRID_DIST + "{}".format(year)],
+                                          elec_loop=row[SET_ELEC_ORDER + "{}".format(year)],
+                                          get_reccuring_costs=True)
+            elif min_code == 8:
+                pass
+                # return pv_diesel_hyb.get_lcoe(energy_per_cell=row[SET_ENERGY_PER_CELL + "{}".format(year)],
+                #                               total_energy_per_cell=row[SET_TOTAL_ENERGY_PER_CELL],
+                #                               prev_code=row[SET_ELEC_FINAL_CODE + "{}".format(year - timestep)],
+                #                               conf_status=row[SET_CONFLICT],
+                #                               start_year=year - timestep,
+                #                               end_year=end_year,
+                #                               people=row[SET_POP + "{}".format(year)],
+                #                               new_connections=row[SET_NEW_CONNECTIONS + "{}".format(year)],
+                #                               num_people_per_hh=row[SET_NUM_PEOPLE_PER_HH],
+                #                               travel_hours=row[SET_TRAVEL_HOURS],
+                #                               ghi=row[SET_GHI],
+                #                               urban=row[SET_URBAN],
+                #                               hybrid_1=hybrid_1,
+                #                               hybrid_2=hybrid_2,
+                #                               hybrid_3=hybrid_3,
+                #                               hybrid_4=hybrid_4,
+                #                               hybrid_5=hybrid_5,
+                #                               tier=row[SET_TIER],
+                #                               grid_cell_area=row[SET_GRID_CELL_AREA],
+                #                               mg_hybrid=True,
+                #                               get_reccuring_costs = True)
+            else:
+                return 0
+
         if cost_choice == 2:
             logging.info('Calculate total discounted investment cost')
             self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost, axis=1)
@@ -3146,6 +3275,9 @@ class SettlementProcessor:
 
             logging.info('Calculating discounted capital investment')
             self.df['CapitalCapacityInvestment' + "{}".format(year)] = self.df.apply(capital_capacity_cost, axis=1)
+
+            logging.info('Calculating discounted reccuring investment')
+            self.df['ReccuringCosts' + "{}".format(year)] = self.df.apply(reccuring_costs, axis=1)
 
             # logging.info('Calculate total discounted investment cost')
             # self.df[SET_INVESTMENT_COST + "{}".format(year)] = self.df.apply(res_investment_cost_2, axis=1)
@@ -3882,9 +4014,12 @@ class SettlementProcessor:
             df_summary[year][sumtechs[sum_index + 5]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                         ["CapitalCapacityInvestment" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index + 6]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 1) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                        ["ReccuringCosts" + "{}".format(year)])
 
             # Cost break down summaries for MG
-            df_summary[year][sumtechs[sum_index+6]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+            df_summary[year][sumtechs[sum_index+7]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
                                                                     (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                           ["InvestmentCostLV" + "{}".format(year)]) + \
                                                       sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
@@ -3897,7 +4032,7 @@ class SettlementProcessor:
                                                                       (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                           ["InvestmentCostLV" + "{}".format(year)])
 
-            df_summary[year][sumtechs[sum_index + 7]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+            df_summary[year][sumtechs[sum_index + 8]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                             ["InvestmentCostMV" + "{}".format(year)]) + \
                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
@@ -3910,33 +4045,33 @@ class SettlementProcessor:
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                             ["InvestmentCostMV" + "{}".format(year)])
 
-            df_summary[year][sumtechs[sum_index + 8]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
-                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
-                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
-                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
-                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
-                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
-                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
-                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostTransformer" + "{}".format(year)])
-
             df_summary[year][sumtechs[sum_index + 9]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
-                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                            ["InvestmentCostHV" + "{}".format(year)]) + \
                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                             ["InvestmentCostTransformer" + "{}".format(year)])
 
             df_summary[year][sumtechs[sum_index + 10]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)]) + \
+                                                        sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                            ["InvestmentCostTransformer" + "{}".format(year)])
+
+            df_summary[year][sumtechs[sum_index + 11]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
                                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                              ["InvestmentCostConnection" + "{}".format(year)]) + \
                                                          sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
@@ -3949,7 +4084,7 @@ class SettlementProcessor:
                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                              ["InvestmentCostConnection" + "{}".format(year)])
 
-            df_summary[year][sumtechs[sum_index + 11]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+            df_summary[year][sumtechs[sum_index + 12]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
                                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                              ["CapitalCapacityInvestment" + "{}".format(year)]) + \
                                                          sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
@@ -3962,15 +4097,37 @@ class SettlementProcessor:
                                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                              ["CapitalCapacityInvestment" + "{}".format(year)])
 
-            df_summary[year][sumtechs[sum_index + 12]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 3) &
+            df_summary[year][sumtechs[sum_index + 13]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 4) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["ReccuringCosts" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5) &
+                                                                        (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["ReccuringCosts" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["ReccuringCosts" + "{}".format(year)]) + \
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 7) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["ReccuringCosts" + "{}".format(year)])
+
+
+            df_summary[year][sumtechs[sum_index + 14]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 3) &
                                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1) & (
                                                                                  self.df[SET_POP + "{}".format(year)] > 0)]
                                                              ["CapitalCapacityInvestment" + "{}".format(year)]) +\
                                                          sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 2) &
                                                                          (self.df[SET_LIMIT + "{}".format(year)] == 1)]
                                                              ["CapitalCapacityInvestment" + "{}".format(year)])
+            df_summary[year][sumtechs[sum_index + 15]] = sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 3) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1) & (
+                                                                                 self.df[SET_POP + "{}".format(year)] > 0)]
+                                                             ["ReccuringCosts" + "{}".format(year)]) +\
+                                                         sum(self.df.loc[(self.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 2) &
+                                                                         (self.df[SET_LIMIT + "{}".format(year)] == 1)]
+                                                             ["ReccuringCosts" + "{}".format(year)])
 
-            sum_index = sum_index + 13
+
+            sum_index = sum_index + 16
 
         df_summary[year][sumtechs[sum_index]] = min(self.df[SET_POP + "{}".format(year)])
         df_summary[year][sumtechs[sum_index+1]] = max(self.df[SET_POP + "{}".format(year)])

@@ -1,7 +1,7 @@
 # Pulls all the other functions together to make magic!
 #
-# Author: KTH dESA Last modified by Andreas Sahlberg
-# Date: 05 June 2019
+# Author: KTH dESA Last modified by Alexandros Korkovelos
+# Date: 13 July 2020
 # Python version: 3.5
 
 import os
@@ -359,13 +359,16 @@ elif choice == 3:
             sumtechs.append('InvestmentCostTransformer_Grid')
             sumtechs.append('InvestmentCostConnection_Grid')
             sumtechs.append('CapitalCapacityInvestment_Grid')
+            sumtechs.append('ReccuringCosts_Grid')
             sumtechs.append('InvestmentCostLV_MG')
             sumtechs.append('InvestmentCostMV_MG')
             sumtechs.append('InvestmentCostHV_MG')
             sumtechs.append('InvestmentCostTransformer_MG')
             sumtechs.append('InvestmentCostConnection_MG')
             sumtechs.append('CapitalCapacityInvestment_MG')
+            sumtechs.append('ReccuringCosts_MG')
             sumtechs.append('CapitalCapacityInvestment_SA')
+            sumtechs.append('ReccuringCosts_SA')
 
         sumtechs.append('Min_cluster_pop_2030')
         sumtechs.append('Max_cluster_pop_2030')
