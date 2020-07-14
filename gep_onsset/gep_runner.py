@@ -163,6 +163,7 @@ elif choice == 3:
         productive_demand = ScenarioParameters.iloc[productiveIndex]['ProductiveDemand']
         prioritization = ScenarioParameters.iloc[prioIndex]['PrioritizationAlgorithm']
         auto_intensification = ScenarioParameters.iloc[prioIndex]['AutoIntensificationKM']
+        print(prioritization, auto_intensification)
 
         settlements_in_csv = base_dir
         settlements_out_csv = os.path.join(output_dir,
