@@ -3,8 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="e93a7d35-a972-4eb6-920b-c6aa8e928aaf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GEP_Generator.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/GEP_Generator.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gep_onsset/gep_onsset.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/gep_onsset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gep_onsset/gep_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/gep_runner.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
