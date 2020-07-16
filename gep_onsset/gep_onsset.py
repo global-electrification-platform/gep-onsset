@@ -3591,17 +3591,13 @@ class SettlementProcessor:
 
                 elecrate = self.df.loc[self.df[SET_LIMIT + "{}".format(year)] == 1,
                                        SET_POP + "{}".format(year)].sum() / self.df[SET_POP + "{}".format(year)].sum()
-                print ("Elec rate before the loop:", elecrate)
-                print (eleclimit)
 
                 while abs(elecrate - eleclimit) > 0.01:
-                    print(elecrate - eleclimit)
                     elecrate += sum(self.df[(self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] < min_investment) &
                                                (self.df[SET_LIMIT + "{}".format(year)] == 0) &
                                                (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][
                                            SET_POP + "{}".format(year)]) / \
                                    self.df[SET_POP + "{}".format(year)].sum()
-                    print("elec rate in the while loop:", elecrate)
                     if abs(eleclimit - elecrate > 0.01) and (iter_limit_3 < 20):
                         min_investment += step_size
                         iter_limit_3 += 1
@@ -3638,7 +3634,6 @@ class SettlementProcessor:
 
                 elecrate = self.df.loc[self.df[SET_LIMIT + "{}".format(year)] == 1, SET_POP + "{}".format(year)].sum() / \
                                self.df[SET_POP + "{}".format(year)].sum()
-                print("final elecrate for the year is:", elecrate)
 
             # TODO The algorithm needs to be updated
             # Review is required
