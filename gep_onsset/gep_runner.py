@@ -1,7 +1,7 @@
 # Pulls all the other functions together to make magic!
 #
-# Author: KTH dESA Last modified by Andreas Sahlberg
-# Date: 05 June 2019
+# Author: KTH dESA Last modified by Alexandros Korkovelos
+# Date: 13 July 2020
 # Python version: 3.5
 
 import os
@@ -44,7 +44,7 @@ if choice == 1:
         df.loc[df[SET_COUNTRY] == country].to_csv(base_dir + '.csv', index=False)
 
 elif choice == 2:
-    SpecsData = pd.read_excel(specs_path, sheetname='SpecsData')
+    SpecsData = pd.read_excel(specs_path, sheet_name='SpecsData')
     messagebox.showinfo('OnSSET', 'Open the file containing separated countries')
     base_dir = filedialog.askopenfilename()
     messagebox.showinfo('OnSSET', 'Browse to result folder and name the calibrated file')
@@ -116,6 +116,8 @@ elif choice == 2:
         onsseter.df.to_csv(settlements_out_csv, index=False)
 
 elif choice == 3:
+    cost_choice = int(input(
+        'Enter 1 to include breakdown costs (run might take longer) or 2 for total investment only: '))
 
     diesel_high = True
     diesel_tag = 'high' if diesel_high else 'low'
@@ -131,10 +133,10 @@ elif choice == 3:
 
     print('\n --- Running scenario --- \n')
 
-    ScenarioInfo = pd.read_excel(specs_path, sheetname='ScenarioInfo')
+    ScenarioInfo = pd.read_excel(specs_path, sheet_name='ScenarioInfo')
     Scenarios = ScenarioInfo['Scenario']
-    ScenarioParameters = pd.read_excel(specs_path, sheetname='ScenarioParameters')
-    SpecsData = pd.read_excel(specs_path, sheetname='SpecsDataCalib')
+    ScenarioParameters = pd.read_excel(specs_path, sheet_name='ScenarioParameters')
+    SpecsData = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(SpecsData.loc[0, SPE_COUNTRY])
     for scenario in Scenarios:
         print('Scenario: ' + str(scenario + 1))
@@ -350,6 +352,24 @@ elif choice == 3:
             for tech in techs:
                 sumtechs.append(element + "_" + tech)
 
+        if cost_choice == 1:
+            sumtechs.append('InvestmentCostLV_Grid')
+            sumtechs.append('InvestmentCostMV_Grid')
+            sumtechs.append('InvestmentCostHV_Grid')
+            sumtechs.append('InvestmentCostTransformer_Grid')
+            sumtechs.append('InvestmentCostConnection_Grid')
+            sumtechs.append('CapitalCapacityInvestment_Grid')
+            sumtechs.append('RecurringCosts_Grid')
+            sumtechs.append('InvestmentCostLV_MG')
+            sumtechs.append('InvestmentCostMV_MG')
+            sumtechs.append('InvestmentCostHV_MG')
+            sumtechs.append('InvestmentCostTransformer_MG')
+            sumtechs.append('InvestmentCostConnection_MG')
+            sumtechs.append('CapitalCapacityInvestment_MG')
+            sumtechs.append('RecurringCosts_MG')
+            sumtechs.append('CapitalCapacityInvestment_SA')
+            sumtechs.append('RecurringCosts_SA')
+
         sumtechs.append('Min_cluster_pop_2030')
         sumtechs.append('Max_cluster_pop_2030')
         sumtechs.append('Min_cluster_area')
@@ -416,7 +436,7 @@ elif choice == 3:
 
             onsseter.calculate_investments(mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                                            sa_diesel_calc, grid_calc, hybrid_1, hybrid_2, hybrid_3,
-                                           hybrid_4, hybrid_5, year, end_year, time_step)
+                                           hybrid_4, hybrid_5, year, end_year, time_step, cost_choice)
 
             onsseter.apply_limitations(eleclimit, year, time_step, prioritization, auto_intensification)
 
@@ -424,7 +444,7 @@ elif choice == 3:
                                     grid_calc, hybrid_1, hybrid_2, hybrid_3, hybrid_4, hybrid_5, year,
                                     end_year, time_step)
 
-            onsseter.calc_summaries(df_summary, sumtechs, year)
+            onsseter.calc_summaries(df_summary, sumtechs, year, cost_choice)
 
         onsseter.df['FinalElecCode' + str(year)] = onsseter.df['FinalElecCode' + str(year)].astype(int)
 
@@ -434,5 +454,6 @@ elif choice == 3:
             elif onsseter.df.iloc[:, i].dtype == 'int64':
                 onsseter.df.iloc[:, i] = pd.to_numeric(onsseter.df.iloc[:, i], downcast='signed')
 
+        logging.info('Exporting result files')
         df_summary.to_csv(summary_csv, index=sumtechs)
         onsseter.df.to_csv(settlements_out_csv, index=False)
