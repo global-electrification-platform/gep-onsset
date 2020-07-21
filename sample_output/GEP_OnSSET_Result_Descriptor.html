@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>GEP_OnSSET_Result_Descriptor.rst—C:\Users\alexl\Dropbox\GitHub\gep-onsset-testing-ground</title>
+    <style type="text/css">
+    html{font-family: sans-serif;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%}body{margin: 0}article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display: block}audio,canvas,progress,video{display: inline-block;vertical-align: baseline}audio:not([controls]){display: none;height: 0}[hidden],template{display: none}a{background: transparent}a:active,a:hover{outline: 0}abbr[title]{border-bottom: 1px dotted}b,strong{font-weight: bold}dfn{font-style: italic}h1{font-size: 2em;margin: 0.67em 0}mark{background: #ff0;color: #000}small{font-size: 80%}sub,sup{font-size: 75%;line-height: 0;position: relative;vertical-align: baseline}sup{top: -0.5em}sub{bottom: -0.25em}img{border: 0}svg:not(:root){overflow: hidden}figure{margin: 1em 40px}hr{box-sizing: content-box;height: 0}pre{overflow: auto}code,kbd,pre,samp{font-family: monospace, monospace;font-size: 1em}button,input,optgroup,select,textarea{color: inherit;font: inherit;margin: 0}button{overflow: visible}button,select{text-transform: none}button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance: button;cursor: pointer}button[disabled],html input[disabled]{cursor: default}button::-moz-focus-inner,input::-moz-focus-inner{border: 0;padding: 0}input{line-height: normal}input[type="checkbox"],input[type="radio"]{box-sizing: border-box;padding: 0}input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{height: auto}input[type="search"]{-webkit-appearance: textfield;box-sizing: content-box}input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance: none}fieldset{border: 1px solid #c0c0c0;margin: 0 2px;padding: 0.35em 0.625em 0.75em}legend{border: 0;padding: 0}textarea{overflow: auto}optgroup{font-weight: bold}table{border-collapse: collapse;border-spacing: 0}td,th{padding: 0}*{box-sizing: border-box}input,select,textarea,button{font: 13px/1.4 Helvetica, arial, freesans, clean, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"}body{min-width: 1020px;font: 13px/1.4 Helvetica, arial, freesans, clean, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";color: #333;background-color: #fff}a{color: #4183c4;text-decoration: none}a:hover,a:active{text-decoration: underline}hr,.rule{height: 0;margin: 15px 0;overflow: hidden;background: transparent;border: 0;border-bottom: 1px solid #ddd}hr:before,.rule:before{display: table;content: ""}hr:after,.rule:after{display: table;clear: both;content: ""}h1,h2,h3,h4,h5,h6{margin-top: 15px;margin-bottom: 15px;line-height: 1.1}h1{font-size: 30px}h2{font-size: 21px}h3{font-size: 16px}h4{font-size: 14px}h5{font-size: 12px}h6{font-size: 11px}small{font-size: 90%}blockquote{margin: 0}.lead{margin-bottom: 30px;font-size: 20px;font-weight: 300;color: #555}.text-muted{color: #999}.text-danger{color: #bd2c00}.text-emphasized{font-weight: bold;color: #333}ul,ol{padding: 0;margin-top: 0;margin-bottom: 0}ol ol,ul ol{list-style-type: lower-roman}ul ul ol,ul ol ol,ol ul ol,ol ol ol{list-style-type: lower-alpha}dd{margin-left: 0}tt,code{font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;font-size: 12px}pre{margin-top: 0;margin-bottom: 0;font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace}#realtime .status{overflow: visible;position: absolute;top: -5px;left: 0;background: url("/public/images/github-status.png");width: 26px;height: 26px;display: block;margin: 0 5px 0 0}#realtime .up{background-position: 0 0}#realtime .problem{background-position: 0 -53px}#realtime .down{background-position: 0 -26px}.container{max-width: 920px;margin: 0 auto 20px auto}#header{background: #FAFAFA;background: -moz-linear-gradient(#FAFAFA, #EAEAEA);background: -webkit-linear-gradient(#FAFAFA, #EAEAEA);-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#fafafa', endColorstr='#eaeaea')";border-bottom: 1px solid #CACACA;box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),0 0 10px rgba(0, 0, 0, 0.1)}#markup{padding: 3px}#markup article{padding-top: 30px}.markdown-body{overflow: hidden;font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;font-size: 16px;line-height: 1.6;word-wrap: break-word}.markdown-body>*:first-child{margin-top: 0 !important}.markdown-body>*:last-child{margin-bottom: 0 !important}.markdown-body .absent{color: #c00}.markdown-body .anchor{position: absolute;top: 0;left: 0;display: block;padding-right: 6px;padding-left: 30px;margin-left: -30px}.markdown-body .anchor:focus{outline: none}.markdown-body h1,.markdown-body h2,.markdown-body h3,.markdown-body h4,.markdown-body h5,.markdown-body h6{position: relative;margin-top: 1em;margin-bottom: 16px;font-weight: bold;line-height: 1.4}.markdown-body h1 .octicon-link,.markdown-body h2 .octicon-link,.markdown-body h3 .octicon-link,.markdown-body h4 .octicon-link,.markdown-body h5 .octicon-link,.markdown-body h6 .octicon-link{display: none;color: #000;vertical-align: middle}.markdown-body h1:hover .anchor,.markdown-body h2:hover .anchor,.markdown-body h3:hover .anchor,.markdown-body h4:hover .anchor,.markdown-body h5:hover .anchor,.markdown-body h6:hover .anchor{padding-left: 8px;margin-left: -30px;text-decoration: none}.markdown-body h1:hover .anchor .octicon-link,.markdown-body h2:hover .anchor .octicon-link,.markdown-body h3:hover .anchor .octicon-link,.markdown-body h4:hover .anchor .octicon-link,.markdown-body h5:hover .anchor .octicon-link,.markdown-body h6:hover .anchor .octicon-link{display: inline-block}.markdown-body h1 tt,.markdown-body h1 code,.markdown-body h2 tt,.markdown-body h2 code,.markdown-body h3 tt,.markdown-body h3 code,.markdown-body h4 tt,.markdown-body h4 code,.markdown-body h5 tt,.markdown-body h5 code,.markdown-body h6 tt,.markdown-body h6 code{font-size: inherit}.markdown-body h1{padding-bottom: 0.3em;font-size: 2.25em;line-height: 1.2;border-bottom: 1px solid #eee}.markdown-body h1 .anchor{line-height: 1}.markdown-body h2{padding-bottom: 0.3em;font-size: 1.75em;line-height: 1.225;border-bottom: 1px solid #eee}.markdown-body h2 .anchor{line-height: 1}.markdown-body h3{font-size: 1.5em;line-height: 1.43}.markdown-body h3 .anchor{line-height: 1.2}.markdown-body h4{font-size: 1.25em}.markdown-body h4 .anchor{line-height: 1.2}.markdown-body h5{font-size: 1em}.markdown-body h5 .anchor{line-height: 1.1}.markdown-body h6{font-size: 1em;color: #777}.markdown-body h6 .anchor{line-height: 1.1}.markdown-body p,.markdown-body blockquote,.markdown-body ul,.markdown-body ol,.markdown-body dl,.markdown-body table,.markdown-body pre{margin-top: 0;margin-bottom: 16px}.markdown-body hr{height: 4px;padding: 0;margin: 16px 0;background-color: #e7e7e7;border: 0 none}.markdown-body ul,.markdown-body ol{padding-left: 2em}.markdown-body ul.no-list,.markdown-body ol.no-list{padding: 0;list-style-type: none}.markdown-body ul ul,.markdown-body ul ol,.markdown-body ol ol,.markdown-body ol ul{margin-top: 0;margin-bottom: 0}.markdown-body li>p{margin-top: 16px}.markdown-body dl{padding: 0}.markdown-body dl dt{padding: 0;margin-top: 16px;font-size: 1em;font-style: italic;font-weight: bold}.markdown-body dl dd{padding: 0 16px;margin-bottom: 16px}.markdown-body blockquote{padding: 0 15px;color: #777;border-left: 4px solid #ddd}.markdown-body blockquote>:first-child{margin-top: 0}.markdown-body blockquote>:last-child{margin-bottom: 0}.markdown-body table{display: block;width: 100%;overflow: auto;word-break: normal;word-break: keep-all}.markdown-body table th{font-weight: bold}.markdown-body table th,.markdown-body table td{padding: 6px 13px;border: 1px solid #ddd}.markdown-body table tr{background-color: #fff;border-top: 1px solid #ccc}.markdown-body table tr:nth-child(2n){background-color: #f8f8f8}.markdown-body img{max-width: 100%;box-sizing: border-box}.markdown-body span.frame{display: block;overflow: hidden}.markdown-body span.frame>span{display: block;float: left;width: auto;padding: 7px;margin: 13px 0 0;overflow: hidden;border: 1px solid #ddd}.markdown-body span.frame span img{display: block;float: left}.markdown-body span.frame span span{display: block;padding: 5px 0 0;clear: both;color: #333}.markdown-body span.align-center{display: block;overflow: hidden;clear: both}.markdown-body span.align-center>span{display: block;margin: 13px auto 0;overflow: hidden;text-align: center}.markdown-body span.align-center span img{margin: 0 auto;text-align: center}.markdown-body span.align-right{display: block;overflow: hidden;clear: both}.markdown-body span.align-right>span{display: block;margin: 13px 0 0;overflow: hidden;text-align: right}.markdown-body span.align-right span img{margin: 0;text-align: right}.markdown-body span.float-left{display: block;float: left;margin-right: 13px;overflow: hidden}.markdown-body span.float-left span{margin: 13px 0 0}.markdown-body span.float-right{display: block;float: right;margin-left: 13px;overflow: hidden}.markdown-body span.float-right>span{display: block;margin: 13px auto 0;overflow: hidden;text-align: right}.markdown-body code,.markdown-body tt{padding: 0;padding-top: 0.2em;padding-bottom: 0.2em;margin: 0;font-size: 85%;background-color: rgba(0,0,0,0.04);border-radius: 3px}.markdown-body code:before,.markdown-body code:after,.markdown-body tt:before,.markdown-body tt:after{letter-spacing: -0.2em;content: "\00a0"}.markdown-body code br,.markdown-body tt br{display: none}.markdown-body del code{text-decoration: inherit}.markdown-body pre>code{padding: 0;margin: 0;font-size: 100%;word-break: normal;white-space: pre;background: transparent;border: 0}.markdown-body .highlight{margin-bottom: 16px}.markdown-body .highlight pre,.markdown-body pre{padding: 16px;overflow: auto;font-size: 85%;line-height: 1.45;background-color: #f7f7f7;border-radius: 3px}.markdown-body .highlight pre{margin-bottom: 0;word-break: normal}.markdown-body pre{word-wrap: normal}.markdown-body pre code,.markdown-body pre tt{display: inline;max-width: initial;padding: 0;margin: 0;overflow: initial;line-height: inherit;word-wrap: normal;background-color: transparent;border: 0}.markdown-body pre code:before,.markdown-body pre code:after,.markdown-body pre tt:before,.markdown-body pre tt:after{content: normal}.markdown-body kbd{display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb}.codehilite{background: #ffffff}.codehilite .c{color: #999988;font-style: italic}.codehilite .err{color: #a61717;background-color: #e3d2d2}.codehilite .k{color: #000000;font-weight: bold}.codehilite .o{color: #000000;font-weight: bold}.codehilite .cm{color: #999988;font-style: italic}.codehilite .cp{color: #999999;font-weight: bold}.codehilite .c1{color: #999988;font-style: italic}.codehilite .cs{color: #999999;font-weight: bold;font-style: italic}.codehilite .gd{color: #000000;background-color: #ffdddd}.codehilite .gd .x{color: #000000;background-color: #ffaaaa}.codehilite .ge{color: #000000;font-style: italic}.codehilite .gr{color: #aa0000}.codehilite .gh{color: #999999}.codehilite .gi{color: #000000;background-color: #ddffdd}.codehilite .gi .x{color: #000000;background-color: #aaffaa}.codehilite .go{color: #888888}.codehilite .gp{color: #555555}.codehilite .gs{font-weight: bold}.codehilite .gu{color: #aaaaaa}.codehilite .gt{color: #aa0000}.codehilite .kc{color: #000000;font-weight: bold}.codehilite .kd{color: #000000;font-weight: bold}.codehilite .kp{color: #000000;font-weight: bold}.codehilite .kr{color: #000000;font-weight: bold}.codehilite .kt{color: #445588;font-weight: bold}.codehilite .m{color: #009999}.codehilite .s{color: #d14}.codehilite .na{color: #008080}.codehilite .nb{color: #0086B3}.codehilite .nc{color: #445588;font-weight: bold}.codehilite .no{color: #008080}.codehilite .ni{color: #800080}.codehilite .ne{color: #990000;font-weight: bold}.codehilite .nf{color: #990000;font-weight: bold}.codehilite .nn{color: #555555}.codehilite .nt{color: #000080}.codehilite .nv{color: #008080}.codehilite .ow{color: #000000;font-weight: bold}.codehilite .w{color: #bbbbbb}.codehilite .mf{color: #009999}.codehilite .mh{color: #009999}.codehilite .mi{color: #009999}.codehilite .mo{color: #009999}.codehilite .sb{color: #d14}.codehilite .sc{color: #d14}.codehilite .sd{color: #d14}.codehilite .s2{color: #d14}.codehilite .se{color: #d14}.codehilite .sh{color: #d14}.codehilite .si{color: #d14}.codehilite .sx{color: #d14}.codehilite .sr{color: #009926}.codehilite .s1{color: #d14}.codehilite .ss{color: #990073}.codehilite .bp{color: #999999}.codehilite .vc{color: #008080}.codehilite .vg{color: #008080}.codehilite .vi{color: #008080}.codehilite .il{color: #009999}
+    </style>
+    <style type="text/css">
+      .markdown-body hr{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC")}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="markup">
+        <article id="content" class="markdown-body">
+          <div class="document">
+<div class="section" id="result-file-column-descriptor">
+<h1>Result file column descriptor</h1>
+<p>The electrification analysis with <a class="reference external" href="https://github.com/global-electrification-platform/gep-onsset">gep_onsset</a> yields two main output files. The first, provides the output of the analysis in the highest granularity possible, in the form of a csv file. Each row represents a settlement and each column an attribute of this settlement. The second, provides summaries of key parameters and findings at a national level. Below follows a description of columns for these two types of files. <strong>Note!</strong> An example of these files is available <a class="reference external" href="https://github.com/global-electrification-platform/gep-onsset/tree/master/sample_output">here</a>.</p>
+<div class="section" id="full-result-csv-file">
+<h2>Full-result csv file</h2>
+<p>The following table provides a brief explanation of the parameters included in the full result csv file.</p>
+<ul class="simple">
+<li>The first 25 columns present variables that are extracted from GIS data (refer to the process <a class="reference external" href="https://github.com/global-electrification-platform/Cluster-based_extraction_OnSSET">here</a>). A list of suggested GIS data source and guidelines are also available at <a class="reference external" href="https://gep-user-guide.readthedocs.io/en/latest/Interoperability.html">GEP Data guidelines</a>.</li>
+<li>Columns 25-58 are the result of the calibration process. They run only once and do not need to repeat for each scenario. They essentially calibrate the input GIS data to reflect official statistics (e.g. population records) or generate parameters that are used in the electrification analysis (e.g. wind capacity factor).</li>
+<li>Finally, the remaining columns are informed by the electrification analysis per se. They repeat as many time as the intermediate years of the analysis. Therefore, these columns are presented only once below and are (usually) accompanied by the identifier &lt;year&gt;.</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="1%" />
+<col width="9%" />
+<col width="4%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">#</th>
+<th class="head">Column</th>
+<th class="head">Unit</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>Country</td>
+<td>name</td>
+<td>Name of the country in focus (e.g. Malawi)</td>
+</tr>
+<tr><td>2</td>
+<td>NightLights</td>
+<td>nW cm^−2 sr^−1</td>
+<td>Average yearly value of stable night lights luminosity. Value   is used (together with other parameters) to identify current electrification   status of the settlement.</td>
+</tr>
+<tr><td>3</td>
+<td>Pop</td>
+<td>people</td>
+<td>Number of people living in the settlement, as retrieved from   the GIS data source (without calibration)</td>
+</tr>
+<tr><td>4</td>
+<td>id</td>
+<td>number</td>
+<td>Unique identifier of each settlement</td>
+</tr>
+<tr><td>5</td>
+<td>GridCellArea</td>
+<td>sq.km</td>
+<td>Area of the settlement; retrieved from population cluster   development and processing</td>
+</tr>
+<tr><td>6</td>
+<td>ElecPop</td>
+<td>people</td>
+<td>Number of people with access to electricity in the base year;   Value is retrieved from the cluster development process</td>
+</tr>
+<tr><td>7</td>
+<td>WindVel</td>
+<td>m/s</td>
+<td>Yearly average wind speed in the area of the settlement</td>
+</tr>
+<tr><td>8</td>
+<td>GHI</td>
+<td>kWh/m^2/year</td>
+<td>Yearly average Global Horizontal Irradiation in the area of   the settlement</td>
+</tr>
+<tr><td>9</td>
+<td>TravelHours</td>
+<td>hours</td>
+<td>Travel time to nearest town of 50k people; in the case of   (polygon) clusters this value represents the minimum distance at any   direction</td>
+</tr>
+<tr><td>10</td>
+<td>Elevation</td>
+<td>m</td>
+<td>Above sea level; in the case of cluster this value reflects   the average elevation in the area of the settlement</td>
+</tr>
+<tr><td>11</td>
+<td>Slope</td>
+<td>deg</td>
+<td>A product of DEM indicating terrain slope; in the case of   cluster this value reflects the average slope in the area of the settlement</td>
+</tr>
+<tr><td>12</td>
+<td>ResidentialDemandTIerCustom</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target based on a custom-based, bottom up   approach (if available)</td>
+</tr>
+<tr><td>13</td>
+<td>LandCover</td>
+<td>1 to 15</td>
+<td>Type of land cover as defined by the source data; refer to   documentation</td>
+</tr>
+<tr><td>14</td>
+<td>SubstationDist</td>
+<td>km</td>
+<td>Distance to nearest sub-station; based on best available GIS   data sources in the base year; in the case of (polygon) clusters this value   represents the minimum distance at any direction</td>
+</tr>
+<tr><td>15</td>
+<td>CurrentHVLineDist</td>
+<td>km</td>
+<td>Distance to nearest HV line; based on best available GIS data   sources in the base year; in the case of (polygon) clusters this value   represents the minimum distance at any direction</td>
+</tr>
+<tr><td>16</td>
+<td>CurrentMVLineDist</td>
+<td>km</td>
+<td>Distance to nearest MV line; based on best available GIS data   sources in the base year; in the case of (polygon) clusters this value   represents the minimum distance at any direction</td>
+</tr>
+<tr><td>17</td>
+<td>RoadDist</td>
+<td>km</td>
+<td>Distance to nearest (primary/secondary) road; based on best   available GIS data in source in the base year; in the case of (polygon)   clusters this value represents the minimum distance at any direction</td>
+</tr>
+<tr><td>18</td>
+<td>X_deg</td>
+<td>deg</td>
+<td>Longitude</td>
+</tr>
+<tr><td>19</td>
+<td>Y_deg</td>
+<td>deg</td>
+<td>Latitude</td>
+</tr>
+<tr><td>20</td>
+<td>TransformerDist</td>
+<td>km</td>
+<td>Distance to nearest service transformer; based on best   available GIS data sources in the base year; in the case of (polygon)   clusters this value represents the minimum distance at any direction</td>
+</tr>
+<tr><td>21</td>
+<td>PlannedMVLineDist</td>
+<td>km</td>
+<td>Distance to nearest planned MV line; based on best available   GIS data; in the case of (polygon) clusters this value represents the minimum   distance at any direction</td>
+</tr>
+<tr><td>22</td>
+<td>PlannedHVLineDist</td>
+<td>km</td>
+<td>Distance to nearest planned HV line; based on best available   GIS data; in the case of (polygon) clusters this value represents the minimum   distance at any direction</td>
+</tr>
+<tr><td>23</td>
+<td>HydropowerDist</td>
+<td>km</td>
+<td>Distance to nearest site with identified small scale   hydropower potential</td>
+</tr>
+<tr><td>24</td>
+<td>Hydropower</td>
+<td>kW</td>
+<td>Technical potential of the nearest small scale hydropower site</td>
+</tr>
+<tr><td>25</td>
+<td>HydropowerFID</td>
+<td>number</td>
+<td>Unique identified of the nearest small scale hydropower site</td>
+</tr>
+<tr><td>26</td>
+<td>IsUrban</td>
+<td>0,1,2</td>
+<td>Indicates Urban/Rural status of the settlement; 2: urban, 1   and 0: rural; 0 refers to small rural settlements while 1 in larger rural   settlements or peri-urban areas, but the model does not differentiate</td>
+</tr>
+<tr><td>27</td>
+<td>PerCapitaDemand</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target based on urban/rural status and   targets set for each type of settlement</td>
+</tr>
+<tr><td>28</td>
+<td>HealthDemand</td>
+<td>kWh/year</td>
+<td>Electricity demand target to support health related activities   in the settlemenent</td>
+</tr>
+<tr><td>29</td>
+<td>EducationDemand</td>
+<td>kWh/year</td>
+<td>Electricity demand target to support education related   activities in the settlemenent</td>
+</tr>
+<tr><td>30</td>
+<td>AgriDemand</td>
+<td>kWh/year</td>
+<td>Electricity demand target to support agriculture related   activities in the settlemenent</td>
+</tr>
+<tr><td>31</td>
+<td>ElectrificationOrder</td>
+<td>number</td>
+<td>Indicates the loop in which the settlement gets electrified;   serves only developer purposes</td>
+</tr>
+<tr><td>32</td>
+<td>Conflict</td>
+<td>0-4</td>
+<td>Indicates conflict level, which in turn affects costing of   electrification; 0: no conflict 4: total unrest; parameter is not used in the   GEP</td>
+</tr>
+<tr><td>33</td>
+<td>CommercialDemand</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target to support commercial activities in   the settlement</td>
+</tr>
+<tr><td>34</td>
+<td>ResidentialDemandTier1</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target for Tier 1</td>
+</tr>
+<tr><td>35</td>
+<td>ResidentialDemandTier2</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target for Tier 2</td>
+</tr>
+<tr><td>36</td>
+<td>ResidentialDemandTier3</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target for Tier 3</td>
+</tr>
+<tr><td>37</td>
+<td>ResidentialDemandTier4</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target for Tier 4</td>
+</tr>
+<tr><td>38</td>
+<td>ResidentialDemandTier5</td>
+<td>kWh/capita/year</td>
+<td>Electricity demand target for Tier 5</td>
+</tr>
+<tr><td>39</td>
+<td>PopStartYear</td>
+<td>people</td>
+<td>Calibrated population to match with official statistics in the   base year</td>
+</tr>
+<tr><td>40</td>
+<td>Pop&lt;year&gt;High</td>
+<td>people</td>
+<td>Projected population in the specified &lt;year&gt; based on   high growth indicators</td>
+</tr>
+<tr><td>41</td>
+<td>Pop&lt;year&gt;Low</td>
+<td>people</td>
+<td>Projected population in the specified &lt;year&gt; based on   low growth indicators</td>
+</tr>
+<tr><td>42</td>
+<td>Pop&lt;base year&gt;</td>
+<td>people</td>
+<td>Calibrated population to match with official statistics in the   base year</td>
+</tr>
+<tr><td>43</td>
+<td>RoadDistClassified</td>
+<td>1 to 5</td>
+<td>Classified value of distance to road used to calculate grid   penalty factor</td>
+</tr>
+<tr><td>44</td>
+<td>SubstationDistClassified</td>
+<td>1 to 5</td>
+<td>Classified value of distance to sub-station used to calculate   grid penalty factor</td>
+</tr>
+<tr><td>45</td>
+<td>LandCoverClassified</td>
+<td>1 to 5</td>
+<td>Classified value of land cover type used to calculate grid   penalty factor</td>
+</tr>
+<tr><td>46</td>
+<td>ElevationClassified</td>
+<td>1 to 5</td>
+<td>Classified value of elevation used to calculate grid penalty   factor</td>
+</tr>
+<tr><td>47</td>
+<td>SlopeClassified</td>
+<td>1 to 5</td>
+<td>Classified value of slope used to calculate grid penalty   factor</td>
+</tr>
+<tr><td>48</td>
+<td>GridClassification</td>
+<td>1 to 5</td>
+<td>Grid extension suitability index; Higher value indicates   higher suitability; based on an Analytic Hierarchy Process (AHP) over the   above parameters</td>
+</tr>
+<tr><td>49</td>
+<td>GridPenalty</td>
+<td>number</td>
+<td>Grid extension cost multiplier based on above classification;   default value 1 induces no additional costs</td>
+</tr>
+<tr><td>50</td>
+<td>WindCF</td>
+<td>from ~0 to 1</td>
+<td>Wind capacity factor estimated based on available wind speed   and power rating of Vestas V-44 600kW turbine</td>
+</tr>
+<tr><td>51</td>
+<td>ElecPopCalib</td>
+<td>people</td>
+<td>Number of people with access to (grid) electricity, calibrated   to match official statistics in the base year</td>
+</tr>
+<tr><td>52</td>
+<td>ElecStart</td>
+<td>0,1</td>
+<td>Electrification status in the base year; 0: non-electrified 1:   electrified (by the grid)</td>
+</tr>
+<tr><td>53</td>
+<td>GridDistCalibElec</td>
+<td>km</td>
+<td>Distance to nearest power infrastructure element (transformer,   MV, HV); based on their availability. In case transformers are not available   it will lookup the next available element (e.g. MV)</td>
+</tr>
+<tr><td>54</td>
+<td>Elec_Initial_Status_Grid&lt;year&gt;</td>
+<td>0,1</td>
+<td>Grid electricity status in the specified base year; 0:   non-electrified 1: electrified by the grid</td>
+</tr>
+<tr><td>55</td>
+<td>Elec_Init_Status_Offgrid&lt;year&gt;</td>
+<td>0,1</td>
+<td>Off-grid electricity status in the specified base year; 0:   non-electrified 1: electrified by an off-grid technology</td>
+</tr>
+<tr><td>56</td>
+<td>Actual_Elec_Status_&lt;year&gt;</td>
+<td>0,1</td>
+<td>Overall electrification status in the specified year; 0:   non-electrified 1: electrified by any technology</td>
+</tr>
+<tr><td>57</td>
+<td>FinalElecCode&lt;year&gt;</td>
+<td>1 to 8 or 99</td>
+<td>Code of electrifying technology in the specified year (1:   grid, 2: stand-alone diesel, 3: stand-alone PV, 4: Mini-grid diesel, 5:   Mini-grid PV, 6: Mini-grid Wind, 7: Mini-grid Hydro, 8: Hybrid Mini-grid, 99:   not-electrified)</td>
+</tr>
+<tr><td>58</td>
+<td>GridReachYear</td>
+<td>year</td>
+<td>Estimated year that the grid might be able to reach this   settlement; currently de-activated and not used in the GEP</td>
+</tr>
+<tr><td>59</td>
+<td>Pop&lt;year&gt;</td>
+<td>people</td>
+<td>Population in the specified year taking in to account the   scenario parameterization (either low or high growth)</td>
+</tr>
+<tr><td>60</td>
+<td>NewConnections&lt;year&gt;</td>
+<td>people</td>
+<td>Number of people to get electrified in the specified year;   excludes population that is already electrified in the settlement (e.g. in   partially electrified settlements or new population due to growth between the   years of the analysis)</td>
+</tr>
+<tr><td>61</td>
+<td>NumPeoplePerHH</td>
+<td>people</td>
+<td>Number of people per type of household (different for   urban/rural)</td>
+</tr>
+<tr><td>62</td>
+<td>Tier</td>
+<td>1 to 5</td>
+<td>Reflective targeted &quot;tier&quot; of electrification for   the settlement; based on parameterization in each scenario</td>
+</tr>
+<tr><td>63</td>
+<td>EnergyPerSettlement&lt;year&gt;</td>
+<td>kWh/year</td>
+<td>Total electricity demand (to be covered) in the settlement in   the specified year; based on new connections and target</td>
+</tr>
+<tr><td>64</td>
+<td>TotalEnergyPerCell</td>
+<td>kWh/year</td>
+<td>Total electricity demand in the settlement (already covered +   to be covered)</td>
+</tr>
+<tr><td>65</td>
+<td>MG_Hydro&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for mini-grid hydro power in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>66</td>
+<td>MG_PV&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for mini-grid PV in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>67</td>
+<td>MG_Wind&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for mini-grid wind in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>68</td>
+<td>MG_Diesel&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for mini-grid diesel in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>69</td>
+<td>SA_Diesel&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for stand alone diesel in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>70</td>
+<td>SA_PV&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for stand alone PV in the   settlement in the specified year; based on parameterization defined in the   studied scenario; 99 indicates non availability of this resource</td>
+</tr>
+<tr><td>71</td>
+<td>Minimum_Tech_Off_grid&lt;year&gt;</td>
+<td>name</td>
+<td>Name &amp; type of off-grid technology that provides the   lowest lcoe in the specified year; based on parameterization defined in the   studied scenario</td>
+</tr>
+<tr><td>72</td>
+<td>Minimum_LCOE_Off_grid&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity of the off-grid technology that   provides the lowest lcoe in the specified year; based on parameterization   defined in the studies scenario</td>
+</tr>
+<tr><td>73</td>
+<td>Off_Grid_Code&lt;year&gt;</td>
+<td>2 to 8</td>
+<td>Code of electrifying off-grid technology in the specified year   that provide the lowest lcoe; (2: stand-alone diesel, 3: stand-alone PV, 4:   Mini-grid diesel, 5: Mini-grid PV, 6: Mini-grid Wind, 7: Mini-grid Hydro, 8:   Hybrid Mini-grid)</td>
+</tr>
+<tr><td>74</td>
+<td>Grid&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity for grid in the settlement in   the specified year; if already electrified lcoe is equal to grid generating   cost (input in the analysis) else lcoe reflects the marginal cost of grid   extension; 99 indicates that grid lcoe was not estimated for the settlement   (e.g. excluded from hashing process)</td>
+</tr>
+<tr><td>75</td>
+<td>new_connections_household</td>
+<td>kWh/year</td>
+<td>Targeted electricity demand per household; new connections   divided with number of people per household</td>
+</tr>
+<tr><td>76</td>
+<td>MinimumOverall&lt;year&gt;</td>
+<td>name</td>
+<td>Name &amp; type of technology that provides the lowest lcoe in   the specified year; based on parameterization defined in the studied scenario</td>
+</tr>
+<tr><td>77</td>
+<td>MinimumOverallLCOE&lt;year&gt;</td>
+<td>$/kWh</td>
+<td>Levelized cost of electricity of the technology that provides   the lowest lcoe in the specified year; based on parameterization defined in   the studies scenario</td>
+</tr>
+<tr><td>78</td>
+<td>MinimumOverallCode&lt;year&gt;</td>
+<td>1 to 8</td>
+<td>Code of electrifying technology in the specified year that   provide the lowest lcoe; (1: grid, 2: stand-alone diesel, 3: stand-alone PV,   4: Mini-grid diesel, 5: Mini-grid PV, 6: Mini-grid Wind, 7: Mini-grid Hydro,   8: Hybrid Mini-grid)</td>
+</tr>
+<tr><td>79</td>
+<td>InvestmentCost&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost for electrification of the settlement in the   specified year, by the selected technology; costs are discounted to the base   year of the analysis</td>
+</tr>
+<tr><td>80</td>
+<td>InvestmentCostLV&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost for LV line development in the settlement in   the specified year; applicable for grid and mini-grid technologies; costs are   discounted to the base year of the analysis</td>
+</tr>
+<tr><td>81</td>
+<td>InvestmentCostMV&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost for MV line development in the settlement in   the specified year; applicable for grid and mini-grid technologies; costs are   discounted to the base year of the analysis</td>
+</tr>
+<tr><td>82</td>
+<td>InvestmentCostHV&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost for HV line development in the settlement in   the specified year; applicable for grid; costs are discounted to the base   year of the analysis</td>
+</tr>
+<tr><td>83</td>
+<td>InvestmentCostTransformer&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost for transformer development in the settlement   in the specified year; applicable for grid and mini-grid technologies; costs   are discounted to the base year of the analysis</td>
+</tr>
+<tr><td>84</td>
+<td>InvestmentCostConnection&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment associated with fee connection costs in the   settlement in the specified year; applicable for grid and mini-grid   technologies; costs are discounted to the base year of the analysis</td>
+</tr>
+<tr><td>85</td>
+<td>CapitalCapacityInvestment&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost directly associated with capacity additions in   the settlement in the specified year; costs are discounted to the base year   of the analysis</td>
+</tr>
+<tr><td>86</td>
+<td>RecurringCosts&lt;year&gt;</td>
+<td>million $</td>
+<td>Aggregated recurring costs (O&amp;M, fuel) in the settlement   in the specified year; costs are discounted to the base year of the analysis</td>
+</tr>
+<tr><td>87</td>
+<td>ElecStatusIn&lt;year&gt;</td>
+<td>0,1</td>
+<td>Electrification status of the settlement in the specified   year, before the application of restrictions/limitations; 0: non electrified,   1: electrified</td>
+</tr>
+<tr><td>88</td>
+<td>InvestmentCapita&lt;year&gt;</td>
+<td>million $</td>
+<td>Investment cost per capita (new connections) for   electrification of the settlement in the specified year, by the selected   technology; costs are discounted to the base year of the analysis; value used   to prioritize electrification in some cases</td>
+</tr>
+<tr><td>89</td>
+<td>GridElecIn&lt;year&gt;</td>
+<td>0,1</td>
+<td>Grid electricity status in the specified year; 0:   non-electrified 1: electrified by the grid</td>
+</tr>
+<tr><td>90</td>
+<td>OffGridElecIn&lt;year&gt;</td>
+<td>0,1</td>
+<td>Off-grid electricity status in the specified year; 0:   non-electrified 1: electrified by an off-grid technology</td>
+</tr>
+<tr><td>91</td>
+<td>NewCapacity&lt;year&gt;</td>
+<td>kW</td>
+<td>Additional capacity required to electrify the settlement in   the specified year, based on technological option selected.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="summaries-output">
+<h2>Summaries output</h2>
+<p>The values in the summaries file provide summaries for the whole country/study area.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="80%" />
+<col width="7%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Variable</th>
+<th class="head">Description</th>
+<th class="head">Unit</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>Population</td>
+<td>The population served by each,technology in the end year.</td>
+<td>people</td>
+</tr>
+<tr><td>New Connections</td>
+<td>The number of newly electrified,population by each technology in the end year.</td>
+<td>people</td>
+</tr>
+<tr><td>Capacity</td>
+<td>The additional capacity required by,each technology to fully cover the demand in the end year.</td>
+<td>kW</td>
+</tr>
+<tr><td>Investment</td>
+<td>The investment required by each,technology to reach the electrification target in the end year.</td>
+<td>$</td>
+</tr>
+<tr><td>Technology mix</td>
+<td>Generation mix as calculated by the,OnSSET analysis.</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+</tr>
+<tr><td>LCoE</td>
+<td>Lowest LCoE achieved in each location,as calculated by the OnSSET analysis.</td>
+<td>$/kWh</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+        </article>
+      </div>
+    </div>
+  </body>
+</html>
