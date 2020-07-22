@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'gep_onsset'
-copyright = '2019'
-author = 'KTH dESA'
+copyright = '2020'
+author = 'The GEP consortium'
 
 # The short X.Y version
-version = 'Version 2019.0'
+version = 'Version 2020.0'
 # The full version, including alpha/beta/rc tags
-release = '01-06-2019'
+release = '01-08-2020'
 
 
 # -- General configuration ---------------------------------------------------
