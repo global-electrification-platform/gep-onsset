@@ -14,7 +14,7 @@ Contents
    :maxdepth: 3
 
    Software installation
-   Data collection
+   GIS data collection
    Preparation of the primary input file
    Input file calibration and update
    Scenario run
