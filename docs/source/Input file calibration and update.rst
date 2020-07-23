@@ -98,9 +98,15 @@ The specs file contains the parameters and their values against which the GIS da
 
 Calibration with GEP Generator
 *******************************
-The GEP Generator is an interactive interface, developed as a jupyter notebook (.ipynb) in order to support calling functions in the **gep_onsset** model. The GEP Generator runs in 9 steps. 
+The GEP Generator is an interactive interface, developed as a jupyter notebook (.ipynb) in order to support calling functions in the **gep_onsset** model. The GEP Generator is located in the root directory of the repository. You may access it by simply navigating there via anaconda prompt using:
 
-**Step 1**, requires that the user provides the primary input file (see previous section). **Steps 2 & 4** replace the specs file and allow the user to provide the calibrating parameters in real time. **Step 5** conducts the conditioning and calibration process. 
+``> cd ..\my_designated_local_directory``
+
+``..\my_designated_local_directory> jupyter notebook`` 
+
+Jupyter notebook will open on your default browser; simply select to open the ``GEP Generator.ipynb`` and you are set to go!
+
+The GEP Generator runs in 9 steps. **Step 1**, requires that the user provides the primary input file (see previous section). **Steps 2 & 4** replace the specs file and allow the user to provide the calibrating parameters in real time. **Step 5** conducts the conditioning and calibration process. 
 
 .. note::
 	Note that the GEP generator **does not** store the calibrated results in a separate file but rather continues right away to the scenario runs. This makes the process faster on the one hand, but it means that the conditioning and calibration process runs anew everytime a scenario is executed (only one at a time). 
