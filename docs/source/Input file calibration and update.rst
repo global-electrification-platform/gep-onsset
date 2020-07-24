@@ -3,17 +3,34 @@
 
 The primary input file (see previous section) includes rough data as extracted from the GIS layers. Before proceeding with the electrification analysis, these values need to be conditioned and/or calibrated.
 
-**Conditioning** makes sure that physical values (e.g. GHI, Wind speed, land cover, elevation etc.) are within acceptable limits. 
+- **Conditioning** makes sure that physical values (e.g. GHI, Wind speed, land cover, elevation etc.) are within acceptable limits. 
+- **Calibration** makes sure some of the parameters (e.g. total population, urban/rural ration, electrification rate etc.) are in line with official statistics.
+- **New columns** are also created and support later stages of the analysis (e.g. wind capacity factor, grid penalty ratio, electrification status etc.).
 
-**Calibration** makes sure some of the parameters (e.g. total population, urban/rural ration, electrification rate etc.) are in line with official statistics.
+Calibration with GEP Generator
+*******************************
+The GEP Generator is an interactive interface, developed as a jupyter notebook (.ipynb) in order to support calling functions in the **gep_onsset** model. The GEP Generator is located in the root directory of the repository. You may access it by simply navigating there via anaconda prompt using:
 
- **New columns** are also created and support later stages of the analysis (e.g. wind capacity factor, grid penalty ratio, electrification status etc.).
+``> cd ..\my_designated_local_directory``
+
+``..\my_designated_local_directory> jupyter notebook`` 
+
+Jupyter notebook will open on your default browser; simply select to open the ``GEP Generator.ipynb`` and you are set to go!
+
+The GEP Generator runs in 9 steps (or blocks). Steps 1-5 are used to define calibration parameters and conduct the conditioning/calibration process. In particular, 
+
+- **Step 1** requires that the user provides the primary input file (see previous section)
+- **Steps 2 & 4** allow the user to interactively provide the calibrating parameters
+- **Step 5** conducts the conditioning and calibration process
+
+.. note::
+	* **Step 3** is related to the definition of scenario parameters and is discussed in more detail in the following section.
+
+	* The GEP generator **does not** store the calibrated results in a separate file but rather continues right away to the scenario runs. This makes the process faster on the one hand, but it means that the conditioning and calibration process runs anew everytime a scenario is executed (only one at a time). 
 
 Calibration with gep_runner
 *******************************
-The **gep_runner.py** is used to call functions from the **gep_onsset.py** as requested. You may execute **gep_runner** in any IDE of preference, we suggest PyCharm.
-
-Interaction with the code using **gep_runner** takes place in the python console or your IDE. Upon initiation, the code will prompt you to select one of the three following options:
+The **gep_runner.py** is an alternative way to call functions from the **gep_onsset.py**. You may execute **gep_runner** in any IDE of preference, we suggest PyCharm. Interaction with the code using **gep_runner** takes place in the python console of your IDE. Upon initiation, the code will prompt you to select one of the three following options:
 
 - 1: To split countries in case of multiple country runs (used rarely)
 - **2: To prepare/calibrate the GIS input file**
@@ -24,7 +41,7 @@ For calibration you may select option 2. Execution requires two files:
 - **The primary input file** (see *Malawi.csv* from previous section)
 - **The specs file** (see example of `specs_mw_one_scenario.csv <https://github.com/global-electrification-platform/gep-onsset/tree/master/test_data>`_). 
 
-The specs file contains the parameters and their values against which the GIS data are conditioned or calibrated. The user shall fill in all necessary values in the `SpecsData` sheet. A description of the parameters is presented below.
+The specs file contains the parameters and their values against which the GIS data are conditioned or calibrated. The user shall fill in all necessary values in the ``SpecsData`` sheet. A description of the parameters is presented below.
 
 +----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+--+
 | Parameter                              | Description                                                                                                                                                       |  |
@@ -92,24 +109,16 @@ The specs file contains the parameters and their values against which the GIS da
 | PopCutOffRoundTwo                      | This value is provided by the model after calibration                                                                                                             |  |
 +----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+--+
 
-.. note::
+With **gep_runner** the calibration process is separated from the scenario runs. That is, the code stops once the conditioning and calibration process is complete. The result is exported in a "calibrated" input file. 
 
-    With **gep_runner** the calibration process runs only once. The process finishes once the conditioning and calibration is complete and the result is a "calibrated" csv file. The user might check the result file and the specs file, which has updated some of the parameters and decide whether the result is satisfactory or the process requires modification.  
+The result file and the updated parameters in the specs file should be reviewed to decide whether the result is satisfactory or the process requires further calibration. Key outputs to cross-check include:
 
-Calibration with GEP Generator
-*******************************
-The GEP Generator is an interactive interface, developed as a jupyter notebook (.ipynb) in order to support calling functions in the **gep_onsset** model. The GEP Generator is located in the root directory of the repository. You may access it by simply navigating there via anaconda prompt using:
-
-``> cd ..\my_designated_local_directory``
-
-``..\my_designated_local_directory> jupyter notebook`` 
-
-Jupyter notebook will open on your default browser; simply select to open the ``GEP Generator.ipynb`` and you are set to go!
-
-The GEP Generator runs in 9 steps. **Step 1**, requires that the user provides the primary input file (see previous section). **Steps 2 & 4** replace the specs file and allow the user to provide the calibrating parameters in real time. **Step 5** conducts the conditioning and calibration process. 
+- Population projection
+- Modelled urban/rural classification
+- Modelled electrification rate (national, urban, rural)
 
 .. note::
-	Note that the GEP generator **does not** store the calibrated results in a separate file but rather continues right away to the scenario runs. This makes the process faster on the one hand, but it means that the conditioning and calibration process runs anew everytime a scenario is executed (only one at a time). 
+	The conditioning & calibration process is driven by relevant functions located in **gep_onsset.py**. One can access and modify these functions in case their existing form does not serve the intended purpose. This requires some experience with the model; in case you are a new user you may experiment with the GEP Generator first before engaging in modification of the core code.
 
 Example of the calibrated input file
 *************************************
@@ -159,3 +168,5 @@ The calibration process will add the following columns to the input file.
 +----+-------------------------------------+--------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | 58 | GridReachYear                       |     year     | Estimated year that the grid might be able to reach this   settlement; currently de-activated and not used in the GEP                                                                                                                  |
 +----+-------------------------------------+--------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+When the calibration process is complete you may proceed with running an electrification scenario (see next section)!

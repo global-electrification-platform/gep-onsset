@@ -1,19 +1,23 @@
 ﻿Post-analysis & Visualization
 =================================
 
-**QGIS**
+Post-analysis module(s)
+###########################
 
-OnSSET is a spatial electrification tool and as such highly relies on the usage of
-Geographic Information Systems (GIS).
-A GIS environment is therefore necessary for two main reasons:
+This section is under development. Once completed it aims to provide access and guiding instructions to scripts and/or modules that perform common post analysis on the **gep_onsset** electrification results. 
 
-* Extract trivial characteristics for the electrification analysis from GIS layers
-  and combine them all together in a format easy to read in python
-  (a .csv file with all the attributes per population point).
-* Visualize the final results in maps.
+Stay tuned for the updates!
 
-Historically OnSSET has relied on ArcGIS, but recently the process has been moved
-to open source GIS environments. OnSSET in it's current form relies on QGIS
-(together with in QGIS included tools from SAGA, GDAL and GRASS)
 
-Download QGIS for free from the official `QGIS website <http://www.qgis.org/en/site/>`_.
+Visualization
+################
+One of the benefits of geospatial analysis is that the results can be vizualized on maps thus convey information in a more direct and "digestible" way. In addition, one might leverage the spatial attributes of the results and in combination with other geo-coded information provide location based analytics.
+
+Using GIS software
+********************
+The **gep_onsset** full result file can be visualized in any GIS medium (`QGIS <http://www.qgis.org/en/site/>`_, `GeoPandas <https://geopandas.org/>`_ etc.) with the use of the coordinate ``X_deg`` and ``Y_deg`` columns. These columns provide the longitude and latitute of each population settlement in ``WGS84 CRS - EPSG:4326``. 
+
+Using the GEP Explorer
+*************************
+The GEP Explorer is open source. That is, it can be configured and used locally and independently of the online server. You can find more information of how to configure it on your local machine at the `explorer <https://github.com/global-electrification-platform/explorer/tree/develop>`_ repository on GitHub.
+

@@ -4,29 +4,30 @@
 The basis of an electrification analysis with **gep_onsset** is the geo-location of population or settlements. Distribution of population might be available as a raster layer (e.g. `WorldPop <https://www.worldpop.org/>`_) or as vector layer (`SEDAC <https://sedac.ciesin.columbia.edu/data/set/grump-v1-settlement-points/data-download>`_).
 
 Creating population "clusters"
-**************************************************
+##########################################
 
 In GEP, we have processed existing population datasets (and `HRSL <https://data.humdata.org/dataset/highresolutionpopulationdensitymaps>`_ in particular) to create population "clusters". A cluster is a bundle of pixelated areas in close proximity to each other that merge and create a vector polygon. Clusters - in contract to gridded population - have various geometries and sizes and therefore better reflect the geography and behaviour of human settmements. 
 
-You may find more information on the underlying methodology in `this publication <https://www.mdpi.com/1996-1073/12/7/1395>`_. The methodology is also available for testing and experimentation in the form of an open source `Qgis plugin <https://github.com/global-electrification-platform/Clustering>`_. Finally, population clusters developed for Sub-Saharan African countries are openly accecible via `this link <https://data.mendeley.com/datasets/z9zfhzk8cr/3>`_.
+You may find more information on the underlying methodology in `this publication <https://www.mdpi.com/1996-1073/12/7/1395>`_. The methodology is also available for testing and experimentation in the form of an open source `Qgis plugin <https://github.com/global-electrification-platform/Clustering>`_. Population clusters developed for Sub-Saharan African countries are openly accecible via `this link <https://data.mendeley.com/datasets/z9zfhzk8cr/3>`_.
 
  .. note::
 
-    Altough clusters improve the geographic representation of human settlements, their development process comes with its own caveats. For example, densily populated urban areas tend to create big population conglomerates that defy the logic of granular analysis that geo-spatial electrification modelling might bring. You may read more in this `publication <upcoming publication>`_.   
+    Although clusters improve the geographic representation of human settlements, their development process comes with its own caveats. For example, densily populated urban areas tend to create big population conglomerates that defy the logic of granular analysis that geo-spatial electrification modelling might bring. You may read more in this `publication <upcoming publication>`_.   
 
 Adding attributes to population settlements
-**********************************************
+##############################################
 
 Regardless of the source's format, the population layer is eventually converted into a point layer; each point representing the center of the area it covers. In order to prepare the primary input file to **gep_onsset** the values of the foundamental GIS datasets (see previous section) need to be extracted and attributed to each settlement (or point) respectively. 
 
-The extraction process can be executed manually in any GIS environment. This however, involves various commands depending on the type of attribute to be extracted (e.g. Zonal statistics, Raster value to points, nearest neighbor etc.). Therefore, a `Qgis plugin <https://github.com/global-electrification-platform/Cluster-based_extraction_OnSSET>`_ has been developed to automate this process. The plugin comes with installation and how-to-use instructions that allow easy replication of the process for an area of interest.
+The extraction process can be executed manually in any GIS environment. This however, involves various commands depending on the type of attribute to be extracted (e.g. Zonal statistics, Raster value to points, nearest neighbor etc.). 
+
+Therefore, a `Qgis plugin <https://github.com/global-electrification-platform/Cluster-based_extraction_OnSSET>`_ has been developed to automate this process. The plugin comes with installation and how-to-use instructions that allow easy replication of the process for an area of interest.
 
 .. note::
-
-    In case gridded (raster) population is used instead of clusters in the first place, the extraction process may be executed via a modified version of the Qgis Plugin available in `this repository <https://github.com/KTH-dESA/Raster-based_extraction_OnSSET>`_. 
+	In case gridded (raster) population is used instead of clusters in the first place, the extraction process may be executed via a modified version of the Qgis Plugin available in `this repository <https://github.com/KTH-dESA/Raster-based_extraction_OnSSET>`_. 
 
 Example of the primary input file
-*************************************
+##########################################
 This process creates the primary input file for the **gep_onsset** model. The Qgis plugin exports the result in the form of a .csv file. An example of how this file should look like, is available `here <https://github.com/global-electrification-platform/gep-onsset/tree/master/test_data>`_ (as Malawi.csv). 
 
 .. note::

@@ -1,7 +1,7 @@
 ﻿Scenario run
 =================================
 
-If the previous steps have been succesful, running an electrification scenario with **gep_onsset** is a fairly straightforward process. 
+If the previous steps have been successful, running an electrification scenario with **gep_onsset** is a fairly straightforward process. 
 
 Running with GEP Generator
 *******************************
@@ -9,17 +9,34 @@ Running with GEP Generator
 The simplest way to run a scenario is via ``GEP Generator.ipynb``. You may refer to the previous section on how to get is up running. In order to run a scenario you will need:
 
 - **The primary input file** (see *Malawi.csv* from previous section)
-- **Fill in the calibration parameters** (see *Steps 2,4, 5* from previous section)
+- **Fill in the calibration parameters** (same as *Steps 2,4 and 5* from previous section)
 - **Provide the scenario parameters** (*Steps 3 & 6*)
 
 .. note::
-	There are 6 scenario parameters in *Step 3* - also called "levers" in the GEP ecosystem. Each lever has 1-3 possible options the combination of which can generate 216 scenario as presented in the `GEP Explorer <https://electrifynow.energydata.info/>`_. The GEP generator guides the selection process with embedded documentation and link to the relevant sources.
+	**The GEP "levers"**
+
+	The GEP levers refer to 7 key decision parameters, the selection of which can drastically change the output of the electrification analysis. They cover the following:
+
+	- Population growth rate
+	- Level of electricity consumption in to-be-electrified settlements
+	- Targeted national electrification rate in the intermediate year 
+	- Expected electricity generating cost for the central grid
+	- Capital cost of photovoltaic systems
+	- Diesel price
+	- Electricity demand targets for productive uses (agriculture, health, education)
+	- Rollout plan - prioritization (e.g who gets electricity first and how?)
+
+	Each lever has 1-3 possible options the combination of which can generate 216 scenario as presented in the `GEP Explorer <https://electrifynow.energydata.info/>`_. The GEP generator guides the selection process with embedded documentation and link to the relevant sources. 
 
 **Step 7** runs the electrification analysis for the specified scenario. **Note** that in this step, you may also provide the parameter `cost_choice` if you want to include (1) or exclude (2) break down of investment costs. The first option will add computational time in the analysis.
 
 **Step 8** prepares a summary table, four graphs and a map over the key results of the analysis for a quick, on-the-fly review. 
 
-**Step 9** expoprts the results into 3 csv files. The **_Variables**.csv file provides a summary of input variables. The **_Summaries**.csv file provides a summary of key results of the electrification analysis. The **_Results**.csv file provides the electrification results in full granularity. An overview of the content is available in the next section.
+**Step 9** exports the results into 3 csv files:
+
+	- The **_Variables**.csv file provides a summary of input variables 
+	- The **_Summaries**.csv file provides a summary of key results of the electrification analysis 
+	- The **_Results**.csv file provides the electrification results in full granularity. An overview of the content is available in the next section
 
 
 Running with gep_runner
@@ -31,7 +48,8 @@ The **gep_runner** is usually used to run multiple scenarios at once. As shown i
 - **3: To run scenario(s)**
 
 .. note::
-	**Note** that in the latest update, you will also be prompted to provide the parameter `cost_choice` if you want to include (1) or exclude (2) break down of investment costs. The first option will add computational time in the analysis.
+	1. In the latest update, you will also be prompted to provide the parameter `cost_choice` if you want to include (1) or exclude (2) break down of investment costs. The first option will add computational time in the analysis.
+	2. It is also highly recommended that you use the existing patterns ``# TODO``, ``# RUN_PARAM`` and ``# REVIEW`` to navigate through the **gep_onsset.py** and **gep_runner.py** code. You can find more info on how to activate those in PyCharm `here <https://www.jetbrains.com/help/webstorm/using-todo.html>`_.
 
 Execution requires two files:
 
@@ -62,7 +80,7 @@ The following table gives on overview of the potential scenario combinations.
 | Prioritization_algorithm             | 0, 1, 2 | 0: least cost prioritization, 1: forced grid within 1km, 2: forced grid   within 2km                                                                          |
 +--------------------------------------+---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-Therefore the scenario ``0_0_0_0_0_0`` will respectively represent:
+Therefore, the scenario ``0_0_0_0_0_0`` will respectively represent:
 
 - low population growth
 - low electricity demand target (e.g. U4R1)
@@ -77,10 +95,10 @@ Therefore the scenario ``0_0_0_0_0_0`` will respectively represent:
 
 The **gep_runner** yields two csv files for each scenario. 
 
-- The **_Summaries**.csv file that provides a summary of key results of the electrification analysis and 
+- The **_Summaries**.csv file that provides a summary of key results of the electrification analysis
 - The **_Results**.csv file that provides the electrification results in full granularity 
 
-An overview of the content is available in the next section.
-
 .. note::
-	The scenario coding convention is applied in the naming process of the output result files as well. For example the same scenario for Malawi would yield the result file names ``mw-1-0_0_0_0_0_0.csv``.
+	The scenario coding convention is applied in the naming process of the output result files as well. For example the same scenario for Malawi would yield the result file names ``mw-1-0_0_0_0_0_0.csv``. You may refer to `GEP Data Ingest documantation <https://global-electrification-platform.github.io/docs/preparing-the-data/scenario-results/>`_ for additional info.
+
+An overview of the content is available in the next section.

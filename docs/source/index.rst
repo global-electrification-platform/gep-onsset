@@ -5,13 +5,14 @@ The extant documentation serves as a guide to `gep_onsset <https://github.com/gl
 
 The following pages, aim to cover aspects related to the repricability and/or reproducibility of the **gep_onsset** model. That is, the following sections provide a guide on how to set up, prepare, customize and run the model at different levels andt/or entry points, but they **do not** provide an exhaustive description of the model's core functionality (for this you may refer to `here <https://onsset.readthedocs.io/en/latest/index.html>`_).
 
-Altough the documentation is updated frequently, discrepancies might occur due to the evolving nature of the GEP project. Please do not hesitate to get in touch with us in case you observe any inconsistencies or you have any suggestions.
+.. note::
+   Although the documentation is updated frequently, discrepancies might occur due to the evolving nature of the GEP project. Please do not hesitate to get in touch with us in case you observe any inconsistencies or you have any suggestions.
 
 Contents
 +++++++++++++++++++++
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    Software installation
    GIS data collection
@@ -20,5 +21,5 @@ Contents
    Scenario run
    Result file overview
    Post-analysis & Visualization
+   Parameter Dictionary
    Contact
-   License

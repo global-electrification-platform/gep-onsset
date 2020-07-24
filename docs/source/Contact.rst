@@ -1,8 +1,14 @@
 Contact
 ==================
 
-You can send inquiries and feedback at **seap@desa.kth.se**.
+For any questions, feedback or general inquiries please to not hesitate to contact the development team.
 
-Review and/or add your questions on our `Forum <https://groups.google.com/forum/m/#!forum/onsset.>`_.
+**The World Bank**
 
-Meet the team `here <https://www.kth.se/en/itm/inst/energiteknik/forskning/desa>`_.
+- Benjamin Stewart <bstewart@worldbankgroup.org>
+- Alexandros Korkovelos <akorkovelos@worldbank.org>
+
+**KTH dES**
+
+- Andreas Sahlberg <asahl@kth.se>
+- Babak Khavari <khavari@kth.se>
