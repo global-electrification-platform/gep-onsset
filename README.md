@@ -1,53 +1,41 @@
 gep_onsset
 =================================
 
-[![PyPI version](https://badge.fury.io/py/gridfinder.svg)](https://test.pypi.org/project/gep-onsset/)  [![Build Status](https://travis-ci.org/global-electrification-platform/gep-onsset.svg?branch=master)](https://travis-ci.org/global-electrification-platform/gep-onsset) [![Documentation Status](https://readthedocs.org/projects/gep-onsset/badge/?version=latest)](https://gep-onsset.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/gep-onsset/badge/?version=latest)](https://gep-onsset.readthedocs.io/en/latest/?badge=latest)
 
 Documentation: https://gep-onsset.readthedocs.io/en/latest/index.html#
 
 # Scope
 
-This repository contains the source code of the Open Source Spatial Electrification Tool ([OnSSET](http://www.onsset.org/)) as used to inform [electrification investment outlooks](http://gep-explorer.surge.sh/) for the Global Electrification Platform. The repository also includes sample test files available in ```.\test_data``` and sample output files available in ```.\sample_output```. More information on how to replicate, run and interprate results are available in [user's guide.](https://gep-onsset.readthedocs.io/en/latest/index.html#)
+This repository contains the modified source code of the Open Source Spatial Electrification Tool ([OnSSET](http://www.onsset.org/)) that was developed to support the functionalities of the [Global electrification Platform](https://electrifynow.energydata.info/).
 
-## Installation
+## Content
 
-**Requirements**
+- **gep_onsset.py**: the modified source code of the OnSSET model used in the GEP
+- **GEP Generator.ipynb** user-friendly scenario runner developed as a jupyter notebook for easy replication of GEP Explorer scenarios
+- **gep_runner.py**: scenario runner using IDE console preferred for for stand alone calibration and/or multiple scenario runs
+- **test_data** directory condains input data files for testing:
+    - Malawi.csv (primary input file)
+    - specs_mw_one_scenario.xlsx (specs file)
+- **sample_output** directory contains indicative results of the electrification model
+    - mw-1-0_0_0_0_0_1.csv (sample full result file)
+    - mw-1-0_0_0_0_0_1_summary.csv (sample summary result file)
+- **docs** directory contains supporting project documentation
+- **gep_onsset_env.yml** environment info for setting up package requirements related for all supporting processes in this repository
 
-gep_onsset requires Python >= 3.5 with the following packages installed:
-- et-xmlfile>=1.0
-- jdcal>=1.4
-- numpy>=1.16
-- openpyxl>=2.6
-- pandas>=0.24
-- python-dateutil>=2.8
-- pytz==2019.1
-- six>=1.12
-- xlrd>=1.2
-
-
-**Install with pip**
-
-```
-python -m pip install -i https://test.pypi.org/simple/ gep-onsset
-```
-
-**Install from GitHub**
-
-Download or clone the repository and install the required packages (preferably in a virtual environment):
-
-```
-git clone https://github.com/global-electrification-platform/gep-onsset.git
-cd gep-onsset
-pip install -r requirements.txt
-```
-
-The use of GEP generator requires also installation of 
-- IPython
-- jupyter
-- matplotlib
-- seaborn
+More information on how to replicate, run and interprate results are available in [user's guide.](https://gep-onsset.readthedocs.io/en/latest/index.html#)
 
 ## Contact
-For more information regarding the tool, its functionality and implementation please contact the development team at https://www.desa.kth.se.
+For any questions, feedback or general inquiries please to not hesitate to contact the development team.
+
+**The World Bank**
+
+- Benjamin Stewart <bstewart@worldbankgroup.org>
+- Alexandros Korkovelos <akorkovelos@worldbank.org>
+
+**KTH dES**
+
+- Andreas Sahlberg <asahl@kth.se>
+- Babak Khavari <khavari@kth.se>
 
 For any other inquiries and potential collaboration please refer to http://electrifynow.energydata.info
