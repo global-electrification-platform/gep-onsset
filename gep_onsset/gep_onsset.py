@@ -1,5 +1,5 @@
 # Author: KTH dESA Last modified by Alexandros Korkovelos
-# Date: 13 July 2020
+# Date: 02 Oct 2020
 # Python version: 3.5
 
 import os
@@ -1079,7 +1079,7 @@ class SettlementProcessor:
         pop_ratio = pop_actual / self.df[SET_POP].sum()
         # And use this ratio to calibrate the population in a new column
         self.df[SET_POP_CALIB] = self.df.apply(lambda row: row[SET_POP] * pop_ratio, axis=1)
-        if max(self.df[SET_URBAN]) == 3:  # THIS OPTION IS CURRENTLY DISABLED
+        if max(self.df[SET_URBAN]) == 2:  # THIS OPTION IS CURRENTLY DISABLED
             calibrate = True if 'n' in input(
                 'Use urban definition from GIS layer <y/n> (n=model calibration):') else False
         else:
@@ -1902,41 +1902,92 @@ class SettlementProcessor:
             self.df.loc[self.df[SET_CAPITA_DEMAND] * self.df[SET_NUM_PEOPLE_PER_HH] < tier_2, SET_TIER] = 2
             self.df.loc[self.df[SET_CAPITA_DEMAND] * self.df[SET_NUM_PEOPLE_PER_HH] < tier_1, SET_TIER] = 1
 
-            # Add commercial demand
-            # agri = True if 'y' in input('Include agrcultural demand? <y/n> ') else False
-            # if agri:
-            if int(productive_demand) == 1:
-                self.df[SET_CAPITA_DEMAND] += self.df[SET_AGRI_DEMAND]
+            # # Add commercial demand
+            # # agri = True if 'y' in input('Include agrcultural demand? <y/n> ') else False
+            # # if agri:
+            # if int(productive_demand) == 1:
+            #     self.df[SET_CAPITA_DEMAND] += self.df[SET_AGRI_DEMAND]
+            #
+            # # commercial = True if 'y' in input('Include commercial demand? <y/n> ') else False
+            # # if commercial:
+            # if int(productive_demand) == 1:
+            #     self.df[SET_CAPITA_DEMAND] += self.df[SET_COMMERCIAL_DEMAND]
+            #
+            # # health = True if 'y' in input('Include health demand? <y/n> ') else False
+            # # if health:
+            # if int(productive_demand) == 1:
+            #     self.df[SET_CAPITA_DEMAND] += self.df[SET_HEALTH_DEMAND]
+            #
+            # # edu = True if 'y' in input('Include educational demand? <y/n> ') else False
+            # # if edu:
+            # if int(productive_demand) == 1:
+            #     self.df[SET_CAPITA_DEMAND] += self.df[SET_EDU_DEMAND]
 
-            # commercial = True if 'y' in input('Include commercial demand? <y/n> ') else False
-            # if commercial:
-            if int(productive_demand) == 1:
-                self.df[SET_CAPITA_DEMAND] += self.df[SET_COMMERCIAL_DEMAND]
+        # Add electricity demand for productive uses
 
-            # health = True if 'y' in input('Include health demand? <y/n> ') else False
-            # if health:
-            if int(productive_demand) == 1:
-                self.df[SET_CAPITA_DEMAND] += self.df[SET_HEALTH_DEMAND]
+        ## Code above adds productive to per capita demand, ending in extremely high energy per cell.
+        ## I have changed to the code above, note that if productive demand is set to 1 all productive activities are added.
+        ## You may set 0 to each column you want to exclude or re-write the above code to make it more interactive (I avoid this as I want the code to run with as less interaction as possible)
 
-            # edu = True if 'y' in input('Include educational demand? <y/n> ') else False
-            # if edu:
-            if int(productive_demand) == 1:
-                self.df[SET_CAPITA_DEMAND] += self.df[SET_EDU_DEMAND]
+        if int(productive_demand) == 1:
 
-        self.df.loc[self.df[SET_URBAN] == 0, SET_ENERGY_PER_CELL + "{}".format(year)] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
-        self.df.loc[self.df[SET_URBAN] == 1, SET_ENERGY_PER_CELL + "{}".format(year)] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
-        self.df.loc[self.df[SET_URBAN] == 2, SET_ENERGY_PER_CELL + "{}".format(year)] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 0, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
 
-        # if year - time_step == start_year:
-        self.df.loc[self.df[SET_URBAN] == 0, SET_TOTAL_ENERGY_PER_CELL] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
-        self.df.loc[self.df[SET_URBAN] == 1, SET_TOTAL_ENERGY_PER_CELL] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
-        self.df.loc[self.df[SET_URBAN] == 2, SET_TOTAL_ENERGY_PER_CELL] = \
-            self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 1, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
+
+            self.df.loc[self.df[SET_URBAN] == 2, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
+
+            # if year - time_step == start_year:
+            self.df.loc[self.df[SET_URBAN] == 0, SET_TOTAL_ENERGY_PER_CELL] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
+
+            self.df.loc[self.df[SET_URBAN] == 1, SET_TOTAL_ENERGY_PER_CELL] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
+
+            self.df.loc[self.df[SET_URBAN] == 2, SET_TOTAL_ENERGY_PER_CELL] = \
+                (self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]) + \
+                self.df[SET_HEALTH_DEMAND] + \
+                self.df[SET_AGRI_DEMAND] + \
+                self.df[SET_EDU_DEMAND] + \
+                self.df[SET_COMMERCIAL_DEMAND]
+        else:
+            self.df.loc[self.df[SET_URBAN] == 0, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 1, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 2, SET_ENERGY_PER_CELL + "{}".format(year)] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
+
+            # if year - time_step == start_year:
+            self.df.loc[self.df[SET_URBAN] == 0, SET_TOTAL_ENERGY_PER_CELL] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 1, SET_TOTAL_ENERGY_PER_CELL] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
+            self.df.loc[self.df[SET_URBAN] == 2, SET_TOTAL_ENERGY_PER_CELL] = \
+                self.df[SET_CAPITA_DEMAND] * self.df[SET_POP + "{}".format(year)]
 
     def grid_reach_estimate(self, start_year, gridspeed):
         """ Estimates the year of grid arrival based on geospatial characteristics 
