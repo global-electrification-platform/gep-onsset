@@ -1542,7 +1542,7 @@ class SettlementProcessor:
         cell_path_adjusted = list(np.zeros(len(status)).tolist())
         electrified, unelectrified = self.separate_elec_status(status)
 
-        if (prio == 2) or (prio == 4):
+        if (prio == 2) or (prio == 4) or (prio == 6):
             changes = []
             for unelec in unelectrified:
                 try:
@@ -3287,7 +3287,7 @@ class SettlementProcessor:
         logging.info('Determine electrification limits')
         choice = int(prioritization)
         elec_limit_origin = eleclimit
-        if (eleclimit == 1) & (choice != 4):
+        if (eleclimit == 1) & ((choice != 4) or (choice != 6)):
             self.df[SET_LIMIT + "{}".format(year)] = 1
             self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] = self.df[SET_INVESTMENT_COST + "{}".format(year)] / \
                                                                  self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
@@ -3524,7 +3524,7 @@ class SettlementProcessor:
                                                (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][
                                            SET_POP + "{}".format(year)]) / \
                                    self.df[SET_POP + "{}".format(year)].sum()
-                        if (eleclimit - elecrate > 0.01) and (iter_limit_3 < 20):
+                        if (eleclimit - elecrate > 0.01) and (iter_limit_3 < 50):
                             min_investment += step_size
                             iter_limit_3 += 1
                         elif ((elecrate - eleclimit) > 0.01) and (iter_limit_4 < 100):
@@ -3567,6 +3567,85 @@ class SettlementProcessor:
                                    self.df[SET_LIMIT + "{}".format(year)] == 1, SET_POP + "{}".format(year)].sum() / \
                                self.df[SET_POP + "{}".format(year)].sum()
 
+            elif choice == 6:  # Prioritize grid within 1 or 2 km, then lowest investment per capita combined with travel time
+                elecrate = 0
+                min_investment = 0
+                min_dist_to_cities = max(self.df[SET_TRAVEL_HOURS])
+                iter_limit_1 = 0
+                iter_limit_2 = 0
+                iter_limit_3 = 0
+                iter_limit_4 = 0
+                self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] = self.df[SET_INVESTMENT_COST + "{}".format(year)] / \
+                                                                     self.df[SET_NEW_CONNECTIONS + "{}".format(year)]
+                step_size = self.df[SET_INVEST_PER_CAPITA + "{}".format(year)].quantile(q=0.95) / 20
+                travel_time_step = self.df[SET_TRAVEL_HOURS].quantile(q=1) / 100
+
+                # Setting everything with a buffer distance to grid
+                self.df[SET_LIMIT + "{}".format(year)] = 0
+
+                self.df.loc[(self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - timestep)] == 1),
+                            SET_LIMIT + "{}".format(year)] = 1
+
+                self.df.loc[self.df[SET_MV_DIST_PLANNED] < auto_densification,
+                            SET_LIMIT + "{}".format(year)] = 1
+
+                elecrate_g = self.df.loc[self.df[SET_LIMIT + "{}".format(year)] == 1,
+                                       SET_POP + "{}".format(year)].sum() / self.df[SET_POP + "{}".format(year)].sum()
+                elecrate_int = 0
+
+                elecrate = elecrate_g + elecrate_int
+
+                if elecrate > eleclimit:
+                    print ("Forced grid connection to the selected buffer leads /"
+                           "to electrification rate higher than the target of {:. 2f}% specified".format(elecrate*100))
+                else:
+                    while abs(elecrate - eleclimit) > 0.01:
+                        elecrate = elecrate_g + elecrate_int
+
+                        if (eleclimit - elecrate > 0.01) and (iter_limit_3 < 50):
+                            min_investment += step_size
+                            iter_limit_3 += 1
+                            elecrate_int = sum(self.df[(self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] < min_investment) &
+                                        (self.df[SET_LIMIT + "{}".format(year)] == 0) &
+                                        (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][SET_POP + "{}".format(year)]) / \
+                                           self.df[SET_POP + "{}".format(year)].sum()
+                        elif (elecrate - eleclimit > 0.01) and (iter_limit_4 < 100):
+                            min_dist_to_cities -= travel_time_step
+                            iter_limit_4 += 1
+                            elecrate_int = sum(self.df[(self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] < min_investment) &
+                                        (self.df[SET_LIMIT + "{}".format(year)] == 0) &
+                                        (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][SET_POP + "{}".format(year)]) / \
+                                           self.df[SET_POP + "{}".format(year)].sum()
+                        else:
+                            break
+
+                    # Updating (using the SET_LIMIT function) what is electrified in the year and what is not
+                    self.df[SET_LIMIT + "{}".format(year)] = 0
+
+                    self.df.loc[(self.df[SET_ELEC_FUTURE_GRID + "{}".format(year - timestep)] == 1),
+                                    SET_LIMIT + "{}".format(year)] = 1
+
+                    self.df.loc[self.df[SET_MV_DIST_PLANNED] < auto_densification,
+                                    SET_LIMIT + "{}".format(year)] = 1
+
+                    self.df.loc[(self.df[SET_LIMIT + "{}".format(year)] == 0) &
+                                    (self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] <= min_investment) &
+                                    (self.df[SET_TRAVEL_HOURS] <= min_dist_to_cities),
+                                    SET_LIMIT + "{}".format(year)] = 1
+
+                    self.df.loc[(self.df[SET_LIMIT + "{}".format(year)] == 0) &
+                                    (self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] > min_investment) &
+                                    (self.df[SET_TRAVEL_HOURS] <= min_dist_to_cities),
+                                    SET_LIMIT + "{}".format(year)] = 0
+
+                    self.df.loc[(self.df[SET_LIMIT + "{}".format(year)] == 0) &
+                                    (self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] <= min_investment) &
+                                    (self.df[SET_TRAVEL_HOURS] > min_dist_to_cities),
+                                    SET_LIMIT + "{}".format(year)] = 0
+
+
+                elecrate = self.df.loc[self.df[SET_LIMIT + "{}".format(year)] == 1, SET_POP + "{}".format(year)].sum() / \
+                               self.df[SET_POP + "{}".format(year)].sum()
 
             # TODO The algorithm needs to be updated
             # Review is required
