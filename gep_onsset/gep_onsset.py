@@ -3714,7 +3714,7 @@ class SettlementProcessor:
                             elecrate_int = sum(
                                 self.df[(self.df[SET_INVEST_PER_CAPITA + "{}".format(year)] < min_investment) &
                                         (self.df[SET_LIMIT + "{}".format(year)] == 0) &
-                                        (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][ET_POP + "{}".format(year)]) / \
+                                        (self.df[SET_TRAVEL_HOURS] < min_dist_to_cities)][SET_POP + "{}".format(year)]) / \
                                            self.df[SET_POP + "{}".format(year)].sum()
                         else:
                             break
