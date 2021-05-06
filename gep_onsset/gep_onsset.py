@@ -1162,7 +1162,7 @@ class SettlementProcessor:
         return urban_modelled
 
     def elec_current_and_future(self, elec_actual, elec_actual_urban, elec_actual_rural, pop_tot, start_year,
-                                min_night_lights=0, min_pop=50, max_transformer_dist=2, max_mv_dist=2, max_hv_dist=5):
+                                min_night_lights, min_pop, max_transformer_dist, max_mv_dist, max_hv_dist):
         """
         Calibrate the current electrification status, and future 'pre-electrification' status
         """
