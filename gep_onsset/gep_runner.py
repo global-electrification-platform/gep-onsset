@@ -442,7 +442,7 @@ elif choice == 3:
             onsseter.apply_limitations(eleclimit, year, time_step, prioritization, auto_intensification)
 
             onsseter.final_decision(mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc, sa_diesel_calc,
-                                    grid_calc, hybrid_1, hybrid_2, hybrid_3, hybrid_4, hybrid_5, year,
+                                    grid_calc, year,
                                     end_year, time_step)
 
             onsseter.calc_summaries(df_summary, sumtechs, year, cost_choice)
