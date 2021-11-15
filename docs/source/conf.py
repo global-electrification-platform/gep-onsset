@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'gep_onsset'
-copyright = '2020'
+copyright = '2021'
 author = 'The GEP consortium'
 
 # The short X.Y version
-version = 'Version 2020.0'
+version = 'Version 2021.0'
 # The full version, including alpha/beta/rc tags
-release = '01-08-2020'
+release = '15-11-2021'
 
 
 # -- General configuration ---------------------------------------------------
@@ -85,7 +85,7 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['nstatic']
+html_static_path = []
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -153,3 +153,14 @@ texinfo_documents = [
      author, 'gep_onsset', 'Modified version of the OnSSET model for GEP',
      'Miscellaneous'),
 ]
+
+## For Sphinx 1.4 or newer use the following line (https://recommonmark.readthedocs.io/en/latest/#getting-started)
+extensions = ['recommonmark']
+
+## For Sphinx 1.3 or older use the following lines instead
+#from recommonmark.parser import CommonMarkParser
+#source_parsers = {
+#    '.md': CommonMarkParser,
+#}
+#
+#source_suffix = ['.rst', '.md']
