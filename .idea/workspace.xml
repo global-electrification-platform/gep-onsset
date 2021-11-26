@@ -3,14 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="e93a7d35-a972-4eb6-920b-c6aa8e928aaf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gep_onsset/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gep_onsset/gep_onsset.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gep_onsset/gep_runner.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sample_output/mw-1-0_0_0_0_0_1.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sample_output/mw-1-0_0_0_0_0_1_summary.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_code.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_data/Malawi.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_data/specs_mw_one_scenario.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gep_onsset/gui_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/gui_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gep_onsset/onsset.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/onsset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gep_onsset/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/gep_onsset/runner.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

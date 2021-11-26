@@ -189,59 +189,59 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
                                       discount_rate=0.08,
                                       )
 
-        grid_calc = Technology(om_of_td_lines=0.03,
+        grid_calc = Technology(om_of_td_lines=0.02,
                                distribution_losses=float(specs_data.iloc[0][SPE_GRID_LOSSES]),
-                               connection_cost_per_hh=100,
+                               connection_cost_per_hh=125,
                                capacity_factor=1,
                                tech_life=30,
                                grid_capacity_investment=float(specs_data.iloc[0][SPE_GRID_CAPACITY_INVESTMENT]),
                                grid_penalty_ratio=1,
                                grid_price=grid_price)
 
-        mg_pv_hybrid_calc = Technology(om_of_td_lines=0.015,
-                                       distribution_losses=0.138,
-                                       connection_cost_per_hh=50,
+        mg_pv_hybrid_calc = Technology(om_of_td_lines=0.02,
+                                       distribution_losses=0.05,
+                                       connection_cost_per_hh=100,
                                        capacity_factor=0.5,
                                        tech_life=20,
                                        mini_grid=True,
                                        hybrid=True)
 
-        mg_wind_hybrid_calc = Technology(om_of_td_lines=0.015,
-                                         distribution_losses=0.138,
-                                         connection_cost_per_hh=50,
+        mg_wind_hybrid_calc = Technology(om_of_td_lines=0.02,
+                                         distribution_losses=0.05,
+                                         connection_cost_per_hh=100,
                                          capacity_factor=0.5,
                                          tech_life=20,
                                          mini_grid=True,
                                          hybrid=True)
 
-        mg_hydro_calc = Technology(om_of_td_lines=0.015,
-                                   distribution_losses=0.138,
-                                   connection_cost_per_hh=50,
+        mg_hydro_calc = Technology(om_of_td_lines=0.02,
+                                   distribution_losses=0.05,
+                                   connection_cost_per_hh=100,
                                    capacity_factor=0.5,
                                    tech_life=30,
                                    capital_cost={float("inf"): 3000},
                                    om_costs=0.02,
                                    mini_grid=True)
 
-        mg_wind_calc = Technology(om_of_td_lines=0.015,
-                                  distribution_losses=0.138,
-                                  connection_cost_per_hh=50,
+        mg_wind_calc = Technology(om_of_td_lines=0.02,
+                                  distribution_losses=0.05,
+                                  connection_cost_per_hh=100,
                                   capital_cost={float("inf"): 3750},
                                   om_costs=0.02,
                                   tech_life=20,
                                   mini_grid=True)
 
-        mg_pv_calc = Technology(om_of_td_lines=0.015,
-                                distribution_losses=0.138,
-                                connection_cost_per_hh=50,
+        mg_pv_calc = Technology(om_of_td_lines=0.02,
+                                distribution_losses=0.05,
+                                connection_cost_per_hh=100,
                                 tech_life=25,
                                 om_costs=0.015,
                                 capital_cost={float("inf"): 2950},
                                 mini_grid=True)
 
-        sa_pv_calc = Technology(base_to_peak_load_ratio=0.8,
+        sa_pv_calc = Technology(base_to_peak_load_ratio=0.9,
                                 tech_life=15,
-                                om_costs=0.015,
+                                om_costs=0.02,
                                 capital_cost={float("inf"): 6950 *  pv_panel_cost_factor,
                                               1: 4470 * pv_panel_cost_factor,
                                               0.100: 6380 * pv_panel_cost_factor,
@@ -250,17 +250,17 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
                                               },
                                 standalone=True)
 
-        mg_diesel_calc = Technology(om_of_td_lines=0.015,
-                                    distribution_losses=0.138,
-                                    connection_cost_per_hh=50,
+        mg_diesel_calc = Technology(om_of_td_lines=0.02,
+                                    distribution_losses=0.05,
+                                    connection_cost_per_hh=100,
                                     capacity_factor=0.7,
-                                    tech_life=10,
+                                    tech_life=20,
                                     om_costs=0.1,
                                     capital_cost={float("inf"): 672},
                                     mini_grid=True)
 
         sa_diesel_calc = Technology(capacity_factor=0.5,
-                                    tech_life=10,
+                                    tech_life=20,
                                     om_costs=0.1,
                                     capital_cost={float("inf"): 814},
                                     standalone=True)
@@ -374,7 +374,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         del onsseter.df['ResidentialDemandTier5']
         del onsseter.df['Slope']
         del onsseter.df['Intensification']
-        del onsseter.df['AverageToPeak']
+        #del onsseter.df['AverageToPeak']    ## RUN_PARAM SL!
         del onsseter.df['GDP']
         del onsseter.df['WindVel']
         del onsseter.df['HydropowerFID']
