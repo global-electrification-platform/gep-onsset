@@ -1,10 +1,15 @@
 """
-gep-onsset package contains the following modules:
+The onsset package contains the following modules:
 
- - gep-onsset.py : main functions of the model
- - gep-runner.py : runner is used to calibrate inputs and specify scenario runs
+ - onsset.py : main functions of the model
+ - runner.py : runner is used to calibrate inputs and specify scenario runs
 """
 
-__version__ = "2019.0"
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
 
-from .gep_onsset import *
+from .onsset import *
