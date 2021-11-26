@@ -11,15 +11,15 @@ This repository contains the modified source code of the Open Source Spatial Ele
 
 ## Content
 
-- **gep_onsset.py**: the modified source code of the OnSSET model used in the GEP
+- **onsset.py**: the modified source code of the OnSSET model used in the GEP
 - **GEP Generator.ipynb** user-friendly scenario runner developed as a jupyter notebook for easy replication of GEP Explorer scenarios
-- **gep_runner.py**: scenario runner using IDE console preferred for for stand alone calibration and/or multiple scenario runs
+- **runner.py**: scenario runner using IDE console preferred for for stand alone calibration and/or multiple scenario runs
 - **test_data** directory condains input data files for testing:
-    - Malawi.csv (primary input file)
-    - specs_mw_one_scenario.xlsx (specs file)
+    - sl-2-country-inputs-calibrated.csv (primary input file for Sierra Leone-- calibrated)
+    - sl-2-specs_calibrated.xlsx (specs file for Sierra Leone -- after calibration)
 - **sample_output** directory contains indicative results of the electrification model
-    - mw-1-0_0_0_0_0_1.csv (sample full result file)
-    - mw-1-0_0_0_0_0_1_summary.csv (sample summary result file)
+    - sl-2-1_0_0_0_0_1.csv (sample full result file for Sierra Leone)
+    - sl-2-1_0_0_0_0_1_summary.csv (sample summary result file for Sierra Leone)
 - **docs** directory contains supporting project documentation
 - **gep_onsset_env.yml** environment info for setting up package requirements related for all supporting processes in this repository
 
