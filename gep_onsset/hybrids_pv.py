@@ -7,11 +7,12 @@ import os
 
 
 def read_environmental_data(path):
-    ghi_curve = pd.read_csv(path, usecols=[3], skiprows=341882).values
-    temp = pd.read_csv(path, usecols=[2], skiprows=341882).values
-
-    # ghi_curve = pd.read_csv(path, usecols=[3], skiprows=3).values * 1000
-    # temp = pd.read_csv(path, usecols=[5], skiprows=3).values
+    try:
+        ghi_curve = pd.read_csv(path, usecols=[3], skiprows=341882).values
+        temp = pd.read_csv(path, usecols=[2], skiprows=341882).values
+    except pd.errors.EmptyDataError:
+        ghi_curve = pd.read_csv(path, usecols=[3], skiprows=3).values * 1000
+        temp = pd.read_csv(path, usecols=[5], skiprows=3).values
     return ghi_curve, temp
 
 
@@ -286,7 +287,9 @@ def pv_diesel_hybrid(
             if year > 0:
                 sum_el_gen += energy_per_hh / ((1 + discount_rate) ** year)
 
-        return sum_costs / sum_el_gen, investment
+            emission_factor = fuel_usage * 256.9131097 * 9.9445485
+
+        return sum_costs / sum_el_gen, investment, emission_factor
 
     diesel_limit = 0.5
 
@@ -294,10 +297,11 @@ def pv_diesel_hybrid(
     investment_range = []
     capacity_range = []
     ren_share_range = []
+    emissions_range = []
 
     for d in diesel_range:
 
-        lcoe, investment = calculate_hybrid_lcoe(d)
+        lcoe, investment, emissions = calculate_hybrid_lcoe(d)
         lcoe = np.where(lpsp > lpsp_max, 99, lcoe)
         lcoe = np.where(diesel_share > diesel_limit, 99, lcoe)
 
@@ -307,10 +311,12 @@ def pv_diesel_hybrid(
         capacity = pv_panel_size[min_lcoe_combination] + diesel_capacity[min_lcoe_combination]
         ren_capacity = pv_panel_size[min_lcoe_combination] / capacity
         # excess_gen = excess_gen[min_lcoe_combination]
+        min_emissions = emissions[min_lcoe_combination]
 
         min_lcoe_range.append(min_lcoe)
         investment_range.append(investment[min_lcoe_combination])
         capacity_range.append(capacity)
         ren_share_range.append(ren_share)
+        emissions_range.append(min_emissions)
 
-    return min_lcoe_range, investment_range, capacity_range, ren_share_range  # , ren_capacity, excess_gen
+    return min_lcoe_range, investment_range, capacity_range, ren_share_range, emissions_range  # , ren_capacity, excess_gen

@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shutil
 
 import pandas as pd
 from onsset import (SET_ELEC_ORDER, SET_LCOE_GRID, SET_MIN_GRID_DIST, SET_GRID_PENALTY,
@@ -27,7 +28,7 @@ except ImportError:
                        SPE_URBAN_MODELLED)
 from openpyxl import load_workbook
 
-logging.basicConfig(format='%(asctime)s\t\t%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s\t\t%(message)s', level=logging.ERROR)
 
 
 def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
@@ -108,7 +109,7 @@ def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
     onsseter.df.to_csv(settlements_out_csv, index=False)
 
 
-def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
+def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv_path, wind_path):
     """
 
     Arguments
@@ -125,6 +126,9 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
     scenario_parameters = pd.read_excel(specs_path, sheet_name='ScenarioParameters')
     specs_data = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(specs_data.loc[0, SPE_COUNTRY])
+
+    grid_emission_factors = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emission_factors.xlsx', sheet_name='Sheet1', index_col='Country')
+    grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')
 
     for scenario in scenarios:
         print('Scenario: ' + str(scenario + 1))
@@ -157,9 +161,30 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
         auto_intensification = scenario_parameters.iloc[rollout_index]['AutoIntensificationKM']
 
+        if int(grid_generation_index) == 0:
+            if int(tier_index) == 0:
+                grid_price = grid_generation_costs.loc[country_id]['NP_BU']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_BU']
+            if int(tier_index) == 1:
+                grid_price = grid_generation_costs.loc[country_id]['NP_Low']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_Low']
+            if int(tier_index) == 2:
+                grid_price = grid_generation_costs.loc[country_id]['NP_High']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_High']
+        elif int(grid_generation_index) == 0:
+            if int(tier_index) == 0:
+                grid_price = grid_generation_costs.loc[country_id]['NP_BU_CT']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_BU_CT']
+            if int(tier_index) == 1:
+                grid_price = grid_generation_costs.loc[country_id]['NP_Low_CT']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_Low_CT']
+            if int(tier_index) == 2:
+                grid_price = grid_generation_costs.loc[country_id]['NP_High_CT']
+            grid_emission_factor = grid_emission_factors.loc[country_id]['NP_High_CT']
+
         ## RUN_PARAM: Make sure the path to the resource data is set up properly here
-        wind_path = os.path.join(r'..\test_data', '{}-2-wind.csv'.format(country_id))
-        pv_path = os.path.join(r'..\test_data', '{}-2-pv.csv'.format(country_id))
+        #wind_path = os.path.join(r'..\test_data', '{}-2-wind.csv'.format(country_id))
+        #pv_path = os.path.join(r'..\test_data', '{}-2-pv.csv'.format(country_id))
 
         settlements_in_csv = calibrated_csv_path
 
@@ -180,7 +205,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         num_people_per_hh_rural = float(specs_data.iloc[0][SPE_NUM_PEOPLE_PER_HH_RURAL])
         num_people_per_hh_urban = float(specs_data.iloc[0][SPE_NUM_PEOPLE_PER_HH_URBAN])
         max_grid_extension_dist = float(specs_data.iloc[0][SPE_MAX_GRID_EXTENSION_DIST])
-        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'])
+        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice']) + (grid_generation_index * (51 / 1000000) * 256.9131097 * 9.9445485)
 
         # RUN_PARAM: Fill in general and technology specific parameters (e.g. discount rate, losses etc.)
         Technology.set_default_values(base_year=start_year,
@@ -281,7 +306,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         eleclimits = {2025: five_year_target, 2030: 1}
         time_steps = {2025: 5, 2030: 5}
 
-        elements = ["1.Population", "2.New_Connections", "3.Capacity", "4.Investment"]
+        elements = ["1.Population", "2.New_Connections", "3.Capacity", "4.Investment", "5.Emissions"]
         techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro", "MG_PV_Hybrid",
                  "MG_Wind_Hybrid"]
         sumtechs = []
@@ -358,7 +383,11 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
             onsseter.calculate_new_capacity(mg_pv_hybrid_capacity, mg_wind_hybrid_capacity, mg_hydro_calc, mg_wind_calc,
                                             mg_pv_calc, sa_pv_calc, mg_diesel_calc, sa_diesel_calc, grid_calc, year)
 
+            onsseter.calculate_emission(grid_factor=0.1, year=year, time_step=time_step, start_year=start_year)
+
             onsseter.calc_summaries(df_summary, sumtechs, year)
+
+
 
 
         del onsseter.df['Conflict']
@@ -390,7 +419,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
             del onsseter.df['Minimum_LCOE_Off_grid' + "{}".format(year)]
             del onsseter.df['Minimum_Tech_Off_grid' + "{}".format(year)]
             del onsseter.df['Off_Grid_Code' + "{}".format(year)]
-            del onsseter.df['RenewableShare' + "{}".format(year)]
+            #del onsseter.df['RenewableShare' + "{}".format(year)]
             del onsseter.df['SADieselFuelCost' + "{}".format(year)]
             del onsseter.df['MGDieselFuelCost' + "{}".format(year)]
 
@@ -404,3 +433,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         onsseter.df.to_csv(settlements_out_csv, index=False)
 
         logging.info('Finished')
+
+    shutil.make_archive(results_folder, 'zip', results_folder)
+    shutil.make_archive(summary_folder, 'zip', summary_folder)
+
+    shutil.rmtree(results_folder)
