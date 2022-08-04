@@ -171,7 +171,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             if int(tier_index) == 2:
                 grid_price = grid_generation_costs.loc[country_id]['NP_High']
                 grid_emission_factor = grid_emission_factors.loc[country_id]['NP_High']
-        elif int(grid_generation_index) == 0:
+        elif int(grid_generation_index) == 1:
             if int(tier_index) == 0:
                 grid_price = grid_generation_costs.loc[country_id]['NP_BU_CT']
                 grid_emission_factor = grid_emission_factors.loc[country_id]['NP_BU_CT']
@@ -383,7 +383,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             onsseter.calculate_new_capacity(mg_pv_hybrid_capacity, mg_wind_hybrid_capacity, mg_hydro_calc, mg_wind_calc,
                                             mg_pv_calc, sa_pv_calc, mg_diesel_calc, sa_diesel_calc, grid_calc, year)
 
-            onsseter.calculate_emission(grid_factor=0.1, year=year, time_step=time_step, start_year=start_year)
+            onsseter.calculate_emission(grid_factor=grid_emission_factor, year=year, time_step=time_step, start_year=start_year)
 
             onsseter.calc_summaries(df_summary, sumtechs, year)
 
