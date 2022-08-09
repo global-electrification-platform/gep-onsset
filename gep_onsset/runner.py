@@ -337,16 +337,16 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
             onsseter.diesel_cost_columns(sa_diesel_cost, mg_diesel_cost, year)
 
-            mg_pv_hybrid_investment, mg_pv_hybrid_capacity = \
-                onsseter.calculate_pv_hybrids_lcoe(year, year - time_step, end_year, time_step, mg_pv_hybrid_calc,
-                                                   pv_panel_cost_factor, pv_path)
-
             mg_wind_hybrid_investment, mg_wind_hybrid_capacity = onsseter.calculate_wind_hybrids_lcoe(year,
                                                                                                       year - time_step,
                                                                                                       end_year,
                                                                                                       time_step,
                                                                                                       mg_wind_hybrid_calc,
                                                                                                       wind_path)
+
+            mg_pv_hybrid_investment, mg_pv_hybrid_capacity = \
+                onsseter.calculate_pv_hybrids_lcoe(year, year - time_step, end_year, time_step, mg_pv_hybrid_calc,
+                                                   pv_panel_cost_factor, pv_path)
 
             sa_diesel_investment, sa_pv_investment, mg_diesel_investment, mg_wind_investment, \
                 mg_hydro_investment, mg_pv_investment = \
@@ -387,8 +387,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             onsseter.calculate_emission(grid_factor=grid_emission_factor, year=year, time_step=time_step, start_year=start_year)
 
             onsseter.calc_summaries(df_summary, sumtechs, year)
-
-
 
 
         del onsseter.df['Conflict']

@@ -2,7 +2,7 @@ import numpy as np
 #import logging
 import pandas as pd
 import os
-from numba import jit
+from numba import jit, prange
 
 #logging.basicConfig(format='%(asctime)s\t\t%(message)s', level=logging.DEBUG)
 
@@ -13,6 +13,123 @@ def read_wind_environmental_data(wind_path):
 
 
 # wind_curve = read_wind_environmental_data()
+
+@jit(nopython=True)
+def wind_diesel_capacities(wind_capacity, battery_size, diesel_capacity, hour_numbers, load_curve,
+                         inv_eff, n_dis, n_chg, energy_per_hh, wind_power, p_rated):
+    fuel_result = 0
+    soc = 0.5
+    unmet_demand = 0
+    excess_gen = 0
+    annual_diesel_gen = 0
+    annual_battery_use = 0
+
+    for hour in hour_numbers:
+        hour = int(hour)
+        # Battery self-discharge (0.02% per hour)
+        annual_battery_use += 0.0002 * soc
+        soc *= 0.9998
+        soc_prev = soc * 1.0
+
+        # Calculation of PV gen and net load
+        wind_gen = wind_power[hour] * wind_capacity / p_rated
+        net_load = load_curve[hour] - wind_gen  # remaining load not met by wind panels
+
+        # Dispatchable energy from battery available to meet load
+        battery_dispatchable = soc * battery_size * n_dis * inv_eff
+        # Energy required to fully charge battery
+        battery_chargeable = (1 - soc) * battery_size / n_chg / inv_eff
+
+        # Below is the dispatch strategy for the diesel generator as described in word document
+
+        if 4 < hour <= 17:
+            # During the morning and day, the batteries are dispatched primarily.
+            # The diesel generator, if needed, is run at the lowest possible capacity
+
+            # Minimum diesel capacity to cover the net load after batteries.
+            # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+            min_diesel = min(max(net_load - battery_dispatchable, 0.4 * diesel_capacity), diesel_capacity)
+
+            if net_load > battery_dispatchable:
+                diesel_gen = min_diesel
+            else:
+                diesel_gen = 0
+
+        elif 17 > hour > 23:
+            # During the evening, the diesel generator is dispatched primarily, at max_diesel.
+            # Batteries are dispatched if diesel generation is insufficient.
+
+            #  Maximum amount of diesel needed to supply load and charge battery
+            # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+            max_diesel = max(min(net_load + battery_chargeable, diesel_capacity), 0.4 * diesel_capacity)
+
+            if net_load > 0:
+                diesel_gen = max_diesel
+            else:
+                diesel_gen = 0
+        else:
+            # During night, batteries are dispatched primarily.
+            # The diesel generator is used at max_diesel if load is larger than battery capacity
+
+            #  Maximum amount of diesel needed to supply load and charge battery
+            # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+            max_diesel = max(min(net_load + battery_chargeable, diesel_capacity), 0.4 * diesel_capacity)
+
+            if net_load > battery_dispatchable:
+                diesel_gen = max_diesel
+            else:
+                diesel_gen = 0
+
+        if diesel_gen > 0:
+            fuel_result = fuel_result + diesel_capacity * 0.08145 + diesel_gen * 0.246
+            annual_diesel_gen += diesel_gen
+
+        # Reamining load after diesel generator
+        net_load = net_load - diesel_gen
+
+        if net_load > 0:
+            if diesel_gen > 0:
+                # If diesel generation is used, but is smaller than load, battery is discharged
+                soc = soc - net_load / n_dis / inv_eff / battery_size
+            elif diesel_gen == 0:
+                # If net load is positive and no diesel is used, battery is discharged
+                soc = soc - net_load / n_dis / battery_size
+        elif net_load < 0:
+            if diesel_gen > 0:
+                # If diesel generation is used, and is larger than load, battery is charged
+                soc = soc - net_load * n_chg * inv_eff / battery_size
+            if diesel_gen == 0:
+                # If net load is negative, and no diesel has been used, excess PV gen is used to charge battery
+                soc = soc - net_load * n_chg / battery_size
+
+        if net_load > 0:
+            hourly_battery_use = min(net_load / n_dis / battery_size, soc_prev)
+            annual_battery_use += hourly_battery_use
+
+        if battery_size > 0:
+            if soc < 0:
+                # If State of charge is negative, that means there's demand that could not be met.
+                unmet_demand = unmet_demand - soc / n_dis * battery_size
+                soc = 0
+
+            if soc > 1:
+                # If State of Charge is larger than 1, that means there was excess PV/diesel generation
+                excess_gen = excess_gen + (soc - 1) / n_chg * battery_size
+                soc = 1
+        else:
+            if net_load > 0:
+                unmet_demand = unmet_demand + net_load
+
+            if net_load < 0:
+                excess_gen = excess_gen - net_load
+
+    condition = unmet_demand / energy_per_hh  # LPSP is calculated
+    excess_gen = excess_gen / energy_per_hh
+    diesel_share = annual_diesel_gen / energy_per_hh
+    battery_life = np.round(2000 / annual_battery_use)  # Run_Param Assuming 2000 full-load cycles for Li-ion batteries
+    battery_life = np.minimum(battery_life, 20)
+
+    return diesel_share, battery_life, condition, fuel_result, excess_gen
 
 
 def wind_diesel_hybrid(
@@ -37,7 +154,6 @@ def wind_diesel_hybrid(
     diesel_life = 10  # diesel generator expected lifetime, years
     wind_om = 0.015  # annual OM cost of wind panels
     diesel_om = 0.1  # annual OM cost of diesel generator
-    k_t = 0.005  # temperature factor of wind panels
     inverter_cost = 536
     inverter_life = 10
     inverter_efficiency = 0.92
@@ -45,7 +161,10 @@ def wind_diesel_hybrid(
 
     wind_curve = wind_curve * wind_speed / np.average(wind_curve)
 
-    hour_numbers = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23) * 365
+    hour_numbers = np.empty(8760)
+    for i in prange(365):
+        for j in prange(24):
+            hour_numbers[i * 24 + j] = j
     dod_max = 0.8  # maximum depth of discharge of battery
 
     def load_curve(tier, energy_per_hh):
@@ -87,122 +206,122 @@ def wind_diesel_hybrid(
 
     load_curve = load_curve(tier, energy_per_hh)
 
-    def wind_diesel_capacities(wind_capacity, battery_size, diesel_capacity, wind_no, diesel_no, battery_no, wind_curve):
-        dod = np.zeros(shape=(24, battery_no, wind_no, diesel_no))
-        battery_use = np.zeros(shape=(battery_no, wind_no, diesel_no))  # Stores the amount of battery discharge during the day
-        fuel_result = np.zeros(shape=(battery_no, wind_no, diesel_no))
-        soc = np.ones(shape=(battery_no, wind_no, diesel_no)) * 0.5
-        unmet_demand = np.zeros(shape=(battery_no, wind_no, diesel_no))
-        excess_gen = np.zeros(shape=(battery_no, wind_no, diesel_no)) # TODO
-        annual_diesel_gen = np.zeros(shape=(battery_no, wind_no, diesel_no))
-
-        p_rated = 600
-        es = 0.85  # losses in wind electricity
-        u_arr = range(1, 26)
-        p_curve = [0, 0, 0, 0, 30, 77, 135, 208, 287, 371, 450, 514, 558,
-                   582, 594, 598, 600, 600, 600, 600, 600, 600, 600, 600, 600]
-        wind_power = np.zeros(8760)
-        wind_curve = np.round(wind_curve)
-        for i in range(len(p_curve)):
-            #  wind_power = np.where(wind_curve == i, p_curve[i], wind_power)
-            wind_curve = np.where(wind_curve == i, p_curve[i], wind_curve)
-        # wind_power = wind_power[:, 0]
-        wind_power = wind_curve
-
-        for i in range(8760):
-
-            # Battery self-discharge (0.02% per hour)
-            battery_use += 0.0002 * soc
-            soc *= 0.9998
-            soc_prev = soc * 1.0
-
-            # Calculation of wind gen and net load
-            wind_gen = wind_power[i] * wind_capacity / p_rated
-            net_load = load_curve[hour_numbers[i]] - wind_gen  # remaining load not met by wind panels
-
-            # Dispatchable energy from battery available to meet load
-            battery_dispatchable = soc * battery_size * n_dis
-            # Energy required to fully charge battery
-            battery_chargeable = (1 - soc) * battery_size / n_chg
-
-            # Below is the dispatch strategy for the diesel generator as described in word document
-
-            if 4 < hour_numbers[i] <= 17:
-                # During the morning and day, the batteries are dispatched primarily.
-                # The diesel generator, if needed, is run at the lowest possible capacity
-
-                # Minimum diesel capacity to cover the net load after batteries.
-                # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
-                min_diesel = np.minimum(
-                    np.maximum(net_load - battery_dispatchable, 0.4 * diesel_capacity),
-                    diesel_capacity)
-
-                diesel_gen = np.where(net_load > battery_dispatchable, min_diesel, 0)
-
-            elif 17 > hour_numbers[i] > 23:
-                # During the evening, the diesel generator is dispatched primarily, at max_diesel.
-                # Batteries are dispatched if diesel generation is insufficient.
-
-                #  Maximum amount of diesel needed to supply load and charge battery
-                # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
-                max_diesel = np.maximum(
-                    np.minimum(net_load + battery_chargeable, diesel_capacity),
-                    0.4 * diesel_capacity)
-
-                diesel_gen = np.where(net_load > 0, max_diesel, 0)
-            else:
-                # During night, batteries are dispatched primarily.
-                # The diesel generator is used at max_diesel if load is larger than battery capacity
-
-                #  Maximum amount of diesel needed to supply load and charge battery
-                # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
-                max_diesel = np.maximum(
-                    np.minimum(net_load + battery_chargeable, diesel_capacity),
-                    0.4 * diesel_capacity)
-
-                diesel_gen = np.where(net_load > battery_dispatchable, max_diesel, 0)
-
-            fuel_result += np.where(diesel_gen > 0, diesel_capacity * 0.08145 + diesel_gen * 0.246, 0)
-            annual_diesel_gen += diesel_gen
-
-            # Reamining load after diesel generator
-            net_load = net_load - diesel_gen
-
-            # If diesel generation is larger than load, battery is charged
-            # If diesel generation is smaller than load, battery is discharged
-            soc -= np.where(net_load > 0,
-                            net_load / n_dis / battery_size,
-                            net_load * n_chg / battery_size)
-
-            # The amount of battery discharge in the hour is stored (measured in State Of Charge)
-            battery_use += np.where(soc < soc_prev, soc_prev - soc, 0)
-
-            # If State of charge is negative, that means there's demand that could not be met.
-            unmet_demand += np.where(soc < 0,
-                                     -soc / n_dis * battery_size,
-                                     0)
-            soc = np.maximum(soc, 0)
-
-            # If State of Charge is larger than 1, that means there was excess wind/diesel generation
-            excess_gen += np.where(soc > 1,
-                                   (soc - 1) / n_chg * battery_size,
-                                   0)
-            # TODO
-            soc = np.minimum(soc, 1)
-
-            dod[hour_numbers[i], :, :] = 1 - soc  # The depth of discharge in every hour of the day is stored
-
-            # The amount of battery discharge in the hour is stored (measured in State Of Charge)
-
-            battery_use += np.where(soc < soc_prev, soc_prev - soc, 0)
-
-        condition = unmet_demand / energy_per_hh  # LPSP is calculated
-        excess_gen = excess_gen / energy_per_hh
-        diesel_share = annual_diesel_gen / energy_per_hh
-        battery_life = np.round(2000 / battery_use)  # Run_Param Assuming 2000 full-load cycles for Li-ion batteries
-        battery_life = np.minimum(battery_life, 20)
-
-        return diesel_share, battery_life, condition, fuel_result, excess_gen
+    # def wind_diesel_capacities(wind_capacity, battery_size, diesel_capacity, wind_no, diesel_no, battery_no, wind_curve):
+    #     dod = np.zeros(shape=(24, battery_no, wind_no, diesel_no))
+    #     battery_use = np.zeros(shape=(battery_no, wind_no, diesel_no))  # Stores the amount of battery discharge during the day
+    #     fuel_result = np.zeros(shape=(battery_no, wind_no, diesel_no))
+    #     soc = np.ones(shape=(battery_no, wind_no, diesel_no)) * 0.5
+    #     unmet_demand = np.zeros(shape=(battery_no, wind_no, diesel_no))
+    #     excess_gen = np.zeros(shape=(battery_no, wind_no, diesel_no)) # TODO
+    #     annual_diesel_gen = np.zeros(shape=(battery_no, wind_no, diesel_no))
+    #
+    #     p_rated = 600
+    #     es = 0.85  # losses in wind electricity
+    #     u_arr = np.arange(1, 26)
+    #     p_curve = [0, 0, 0, 0, 30, 77, 135, 208, 287, 371, 450, 514, 558,
+    #                582, 594, 598, 600, 600, 600, 600, 600, 600, 600, 600, 600]
+    #     wind_power = np.zeros(8760)
+    #     wind_curve = np.round(wind_curve)
+    #     for i in np.arange(len(p_curve)):
+    #         #  wind_power = np.where(wind_curve == i, p_curve[i], wind_power)
+    #         wind_curve = np.where(wind_curve == i, p_curve[i], wind_curve)
+    #     # wind_power = wind_power[:, 0]
+    #     wind_power = wind_curve
+    #
+    #     for i in np.arange(8760):
+    #
+    #         # Battery self-discharge (0.02% per hour)
+    #         battery_use += 0.0002 * soc
+    #         soc *= 0.9998
+    #         soc_prev = soc * 1.0
+    #
+    #         # Calculation of wind gen and net load
+    #         wind_gen = wind_power[i] * wind_capacity / p_rated
+    #         net_load = load_curve[hour_numbers[i]] - wind_gen  # remaining load not met by wind panels
+    #
+    #         # Dispatchable energy from battery available to meet load
+    #         battery_dispatchable = soc * battery_size * n_dis
+    #         # Energy required to fully charge battery
+    #         battery_chargeable = (1 - soc) * battery_size / n_chg
+    #
+    #         # Below is the dispatch strategy for the diesel generator as described in word document
+    #
+    #         if 4 < hour_numbers[i] <= 17:
+    #             # During the morning and day, the batteries are dispatched primarily.
+    #             # The diesel generator, if needed, is run at the lowest possible capacity
+    #
+    #             # Minimum diesel capacity to cover the net load after batteries.
+    #             # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+    #             min_diesel = np.minimum(
+    #                 np.maximum(net_load - battery_dispatchable, 0.4 * diesel_capacity),
+    #                 diesel_capacity)
+    #
+    #             diesel_gen = np.where(net_load > battery_dispatchable, min_diesel, 0)
+    #
+    #         elif 17 > hour_numbers[i] > 23:
+    #             # During the evening, the diesel generator is dispatched primarily, at max_diesel.
+    #             # Batteries are dispatched if diesel generation is insufficient.
+    #
+    #             #  Maximum amount of diesel needed to supply load and charge battery
+    #             # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+    #             max_diesel = np.maximum(
+    #                 np.minimum(net_load + battery_chargeable, diesel_capacity),
+    #                 0.4 * diesel_capacity)
+    #
+    #             diesel_gen = np.where(net_load > 0, max_diesel, 0)
+    #         else:
+    #             # During night, batteries are dispatched primarily.
+    #             # The diesel generator is used at max_diesel if load is larger than battery capacity
+    #
+    #             #  Maximum amount of diesel needed to supply load and charge battery
+    #             # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
+    #             max_diesel = np.maximum(
+    #                 np.minimum(net_load + battery_chargeable, diesel_capacity),
+    #                 0.4 * diesel_capacity)
+    #
+    #             diesel_gen = np.where(net_load > battery_dispatchable, max_diesel, 0)
+    #
+    #         fuel_result += np.where(diesel_gen > 0, diesel_capacity * 0.08145 + diesel_gen * 0.246, 0)
+    #         annual_diesel_gen += diesel_gen
+    #
+    #         # Reamining load after diesel generator
+    #         net_load = net_load - diesel_gen
+    #
+    #         # If diesel generation is larger than load, battery is charged
+    #         # If diesel generation is smaller than load, battery is discharged
+    #         soc -= np.where(net_load > 0,
+    #                         net_load / n_dis / battery_size,
+    #                         net_load * n_chg / battery_size)
+    #
+    #         # The amount of battery discharge in the hour is stored (measured in State Of Charge)
+    #         battery_use += np.where(soc < soc_prev, soc_prev - soc, 0)
+    #
+    #         # If State of charge is negative, that means there's demand that could not be met.
+    #         unmet_demand += np.where(soc < 0,
+    #                                  -soc / n_dis * battery_size,
+    #                                  0)
+    #         soc = np.maximum(soc, 0)
+    #
+    #         # If State of Charge is larger than 1, that means there was excess wind/diesel generation
+    #         excess_gen += np.where(soc > 1,
+    #                                (soc - 1) / n_chg * battery_size,
+    #                                0)
+    #         # TODO
+    #         soc = np.minimum(soc, 1)
+    #
+    #         dod[hour_numbers[i], :, :] = 1 - soc  # The depth of discharge in every hour of the day is stored
+    #
+    #         # The amount of battery discharge in the hour is stored (measured in State Of Charge)
+    #
+    #         battery_use += np.where(soc < soc_prev, soc_prev - soc, 0)
+    #
+    #     condition = unmet_demand / energy_per_hh  # LPSP is calculated
+    #     excess_gen = excess_gen / energy_per_hh
+    #     diesel_share = annual_diesel_gen / energy_per_hh
+    #     battery_life = np.round(2000 / battery_use)  # Run_Param Assuming 2000 full-load cycles for Li-ion batteries
+    #     battery_life = np.minimum(battery_life, 20)
+    #
+    #     return diesel_share, battery_life, condition, fuel_result, excess_gen
 
     # This section creates the range of wind capacities, diesel capacities and battery sizes to be simulated
     ref = 5 * load_curve[19]
@@ -210,17 +329,12 @@ def wind_diesel_hybrid(
     battery_sizes = [0.5 * energy_per_hh / 365, energy_per_hh / 365, 2 * energy_per_hh / 365]
     wind_caps = []
     diesel_caps = []
-    diesel_extend = np.ones(wind_no)
-    wind_extend = np.ones(diesel_no)
 
-    for i in range(wind_no):
+    for i in np.arange(wind_no):
         wind_caps.append(ref * (wind_no - i) / wind_no)
 
-    for j in range(diesel_no):
+    for j in np.arange(diesel_no):
         diesel_caps.append(j * max(load_curve) / diesel_no)
-
-    wind_caps = np.outer(np.array(wind_caps), wind_extend)
-    diesel_caps = np.outer(diesel_extend, np.array(diesel_caps))
 
     # This section creates 2d-arrays to store information on wind capacities, diesel capacities, battery sizes,
     # fuel usage, battery life and LPSP
@@ -229,15 +343,44 @@ def wind_diesel_hybrid(
     wind_panel_size = np.zeros((len(battery_sizes), wind_no, diesel_no))
     diesel_capacity = np.zeros((len(battery_sizes), wind_no, diesel_no))
 
-    for j in range(len(battery_sizes)):
+    diesel_share = np.zeros((len(battery_sizes), wind_no, diesel_no))
+    battery_life = np.zeros((len(battery_sizes), wind_no, diesel_no))
+    lpsp = np.zeros((len(battery_sizes), wind_no, diesel_no))
+    fuel_usage = np.zeros((len(battery_sizes), wind_no, diesel_no))
+    excess_gen = np.zeros((len(battery_sizes), wind_no, diesel_no))
+
+    for j in np.arange(len(battery_sizes)):
         battery_size[j, :, :] *= battery_sizes[j]
         wind_panel_size[j, :, :] = wind_caps
         diesel_capacity[j, :, :] = diesel_caps
 
     # For the number of diesel, wind and battery capacities the lpsp, battery lifetime, fuel usage and LPSP is calculated
-    diesel_share, battery_life, lpsp, fuel_usage, excess_gen = \
-        wind_diesel_capacities(wind_panel_size, battery_size, diesel_capacity, wind_no, diesel_no, len(battery_sizes), wind_curve)
-    battery_life = np.minimum(20, battery_life)
+    p = -1
+    b = -1
+    d = -1
+
+    p_rated = 600
+    es = 0.85  # losses in wind electricity
+    u_arr = np.arange(1, 26)
+    p_curve = [0, 0, 0, 0, 30, 77, 135, 208, 287, 371, 450, 514, 558,
+               582, 594, 598, 600, 600, 600, 600, 600, 600, 600, 600, 600]
+    wind_curve = np.round(wind_curve)
+    for i in np.arange(len(p_curve)):
+        #  wind_power = np.where(wind_curve == i, p_curve[i], wind_power)
+        wind_curve = np.where(wind_curve == i, p_curve[i], wind_curve)
+    wind_power = wind_curve
+
+    for bc in battery_sizes:
+        b += 1
+        p = -1
+        for wc in wind_caps:
+            p += 1
+            d = -1
+            for dc in diesel_caps:
+                d += 1
+                diesel_share[b][p][d], battery_life[b][p][d], lpsp[b][p][d], \
+                fuel_usage[b][p][d], excess_gen[b][p][d] = wind_diesel_capacities(wc, bc, dc, hour_numbers, load_curve, inverter_efficiency, n_dis, n_chg, energy_per_hh, wind_power[:, 0], p_rated)
+
 
     def calculate_hybrid_lcoe(diesel_price):
         # Necessary information for calculation of LCOE is defined
@@ -250,7 +393,7 @@ def wind_diesel_hybrid(
         sum_el_gen = np.zeros((len(battery_sizes), wind_no, diesel_no))
         investment = np.zeros((len(battery_sizes), wind_no, diesel_no))
 
-        for year in range(project_life + 1):
+        for year in np.arange(project_life + 1):
             salvage = np.zeros((len(battery_sizes), wind_no, diesel_no))
 
             fuel_costs = fuel_usage * diesel_price
