@@ -94,20 +94,20 @@ def pv_diesel_hybrid(
 
     def pv_diesel_capacities(pv_capacity, battery_size, diesel_capacity, pv_no, diesel_no, battery_no):
         dod = np.zeros(shape=(24, battery_no, pv_no, diesel_no))
-        battery_use = np.zeros(shape=(24, battery_no, pv_no, diesel_no))  # Stores the amount of battery discharge during the day
+        battery_use = np.zeros(shape=(battery_no, pv_no, diesel_no))  # Stores the amount of battery discharge during the day
         fuel_result = np.zeros(shape=(battery_no, pv_no, diesel_no))
-        battery_life = np.zeros(shape=(battery_no, pv_no, diesel_no))
         soc = np.ones(shape=(battery_no, pv_no, diesel_no)) * 0.5
         unmet_demand = np.zeros(shape=(battery_no, pv_no, diesel_no))
         excess_gen = np.zeros(shape=(battery_no, pv_no, diesel_no))  # TODO
         annual_diesel_gen = np.zeros(shape=(battery_no, pv_no, diesel_no))
-        dod_max = np.ones(shape=(battery_no, pv_no, diesel_no)) * 0.6
 
         for i in range(8760):
 
+
             # Battery self-discharge (0.02% per hour)
-            battery_use[hour_numbers[i], :, :] = 0.0002 * soc
+            battery_use += 0.0002 * soc
             soc *= 0.9998
+            soc_prev = soc * 1.0
 
             # Calculation of PV gen and net load
             t_cell = temp[i] + 0.0256 * ghi[i]  # PV cell temperature
@@ -182,20 +182,15 @@ def pv_diesel_hybrid(
                             net_load * n_chg / battery_size,
                             0)
 
-
-            # The amount of battery discharge in the hour is stored (measured in State Of Charge)
-            battery_use[hour_numbers[i], :, :] = \
-                np.minimum(np.where(net_load > 0,
-                                    net_load / n_dis / battery_size,
-                                    0),
-                           soc)
-                           # 0) # soc)
-
             # If State of charge is negative, that means there's demand that could not be met.
             unmet_demand += np.where(soc < 0,
                                      -soc / n_dis * battery_size,
                                      0)
             soc = np.maximum(soc, 0)
+
+            # The amount of battery discharge in the hour is stored (measured in State Of Charge)
+
+            battery_use += np.where(soc < soc_prev, soc_prev - soc, 0)
 
             # If State of Charge is larger than 1, that means there was excess PV/diesel generation
             excess_gen += np.where(soc > 1,
@@ -205,15 +200,12 @@ def pv_diesel_hybrid(
             soc = np.minimum(soc, 1)
 
             dod[hour_numbers[i], :, :] = 1 - soc  # The depth of discharge in every hour of the day is stored
-            if hour_numbers[i] == 23:  # The battery wear during the last day is calculated
-                battery_used = np.where(dod.max(axis=0) > 0, 1, 0)
-                battery_life += battery_use.sum(axis=0) / (
-                        531.52764 * np.maximum(0.1, dod.max(axis=0) * dod_max) ** -1.12297) * battery_used
 
         condition = unmet_demand / energy_per_hh  # LPSP is calculated
         excess_gen = excess_gen / energy_per_hh
-        battery_life = np.round(1 / battery_life)
         diesel_share = annual_diesel_gen / energy_per_hh
+        battery_life = np.round(2000 / battery_use)  # Run_Param Assuming 2000 full-load cycles for Li-ion batteries
+        battery_life = np.minimum(battery_life, 20)
 
         return diesel_share, battery_life, condition, fuel_result, excess_gen
 
@@ -282,6 +274,9 @@ def pv_diesel_hybrid(
 
             investment += diesel_investment + pv_investment + battery_investment + inverter_investment - salvage
 
+            if year == 0:
+                initial_investment = diesel_investment + pv_investment + battery_investment + inverter_investment
+
             sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment - salvage) / ((1 + discount_rate) ** year)
 
             if year > 0:
@@ -289,7 +284,9 @@ def pv_diesel_hybrid(
 
             emission_factor = fuel_usage * 256.9131097 * 9.9445485
 
-        return sum_costs / sum_el_gen, investment, emission_factor
+            opex = fuel_costs + om_costs
+
+        return sum_costs / sum_el_gen, initial_investment, emission_factor, opex, sum_costs
 
     diesel_limit = 0.5
 
@@ -299,9 +296,17 @@ def pv_diesel_hybrid(
     ren_share_range = []
     emissions_range = []
 
+    pv_cap_out = []
+    diesel_cap_out = []
+    battery_size_out = []
+    battery_life_out = []
+    fuel_usage_out = []
+    opex_out = []
+    npc_out = []
+
     for d in diesel_range:
 
-        lcoe, investment, emissions = calculate_hybrid_lcoe(d)
+        lcoe, investment, emissions, opex, npc = calculate_hybrid_lcoe(d)
         lcoe = np.where(lpsp > lpsp_max, 99, lcoe)
         lcoe = np.where(diesel_share > diesel_limit, 99, lcoe)
 
@@ -309,8 +314,6 @@ def pv_diesel_hybrid(
         min_lcoe_combination = np.unravel_index(np.argmin(lcoe, axis=None), lcoe.shape)
         ren_share = 1 - diesel_share[min_lcoe_combination]
         capacity = pv_panel_size[min_lcoe_combination] + diesel_capacity[min_lcoe_combination]
-        ren_capacity = pv_panel_size[min_lcoe_combination] / capacity
-        # excess_gen = excess_gen[min_lcoe_combination]
         min_emissions = emissions[min_lcoe_combination]
 
         min_lcoe_range.append(min_lcoe)
@@ -319,4 +322,13 @@ def pv_diesel_hybrid(
         ren_share_range.append(ren_share)
         emissions_range.append(min_emissions)
 
-    return min_lcoe_range, investment_range, capacity_range, ren_share_range, emissions_range  # , ren_capacity, excess_gen
+        pv_cap_out.append(pv_panel_size[min_lcoe_combination])
+        diesel_cap_out.append(diesel_capacity[min_lcoe_combination])
+        battery_size_out.append(battery_size[min_lcoe_combination])
+        battery_life_out.append(battery_life[min_lcoe_combination])
+        fuel_usage_out.append(fuel_usage[min_lcoe_combination])
+        opex_out.append(opex[min_lcoe_combination])
+        npc_out.append(npc[min_lcoe_combination])
+
+    return min_lcoe_range, investment_range, capacity_range, ren_share_range, emissions_range, \
+           pv_cap_out, diesel_cap_out, battery_size_out, battery_life_out, fuel_usage_out, opex_out, npc_out

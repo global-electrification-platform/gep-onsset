@@ -3,6 +3,7 @@
 import logging
 import os
 import shutil
+import time
 
 import pandas as pd
 from onsset import (SET_ELEC_ORDER, SET_LCOE_GRID, SET_MIN_GRID_DIST, SET_GRID_PENALTY,
@@ -131,7 +132,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')
 
     for scenario in scenarios:
-        print('Scenario: ' + str(scenario + 1))
+        print('Scenario: ' + str(scenario + 1),  time.ctime())
         country_id = specs_data.iloc[0]['CountryCode']
 
         # Productive uses lever
@@ -410,8 +411,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
         for year in yearsofanalysis:
             onsseter.tech_code_update(year)
-            del onsseter.df['PVHybridGenCost' + "{}".format(year)]
-            del onsseter.df['PVHybridGenCap' + "{}".format(year)]
+            #del onsseter.df['PVHybridGenCost' + "{}".format(year)]
+            #del onsseter.df['PVHybridGenCap' + "{}".format(year)]
             del onsseter.df['MG_PV' + "{}".format(year)]
             del onsseter.df['MG_Wind' + "{}".format(year)]
             del onsseter.df['MG_Diesel' + "{}".format(year)]
@@ -420,8 +421,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             del onsseter.df['Minimum_Tech_Off_grid' + "{}".format(year)]
             del onsseter.df['Off_Grid_Code' + "{}".format(year)]
             #del onsseter.df['RenewableShare' + "{}".format(year)]
-            del onsseter.df['SADieselFuelCost' + "{}".format(year)]
-            del onsseter.df['MGDieselFuelCost' + "{}".format(year)]
+            #del onsseter.df['SADieselFuelCost' + "{}".format(year)]
+            #del onsseter.df['MGDieselFuelCost' + "{}".format(year)]
 
         for i in range(len(onsseter.df.columns)):
             if onsseter.df.iloc[:, i].dtype == 'float64':

@@ -55,10 +55,10 @@ SET_LCOE_MG_PV = 'MG_PV'
 SET_LCOE_MG_HYDRO = 'MG_Hydro'
 SET_LCOE_MG_PV_HYBRID = 'MG_PV_Hybrid'
 SET_INVESTMENT_PV_HYBRID = 'Hybrid_PV_Investment'
-SET_INVESTMENT_PV_HYBRID = 'Hybrid_PV_Capacity'
+SET_CAPACITY_PV_HYBRID = 'Hybrid_PV_Capacity'
 SET_LCOE_MG_WIND_HYBRID = 'MG_Wind_Hybrid'
 SET_INVESTMENT_WIND_HYBRID = 'Hybrid_Wind_Investment'
-SET_INVESTMENT_WIND_HYBRID = 'Hybrid_Wind_Capacity'
+SET_CAPACITY_WIND_HYBRID = 'Hybrid_Wind_Capacity'
 SET_REN_HYBRID = 'Hybrid_ren_share'
 SET_REN_CAP_HYBRID = 'Hybrid_ren_cap_share'
 SET_HYBRID_EXCESS = 'HybridExcess'
@@ -192,7 +192,7 @@ class Technology:
                  total_energy_per_cell, prev_code, grid_cell_area, base_to_peak, additional_mv_line_length=0.0,
                  capacity_factor=0.9, grid_penalty_ratio=1, fuel_cost=0, elec_loop=0, productive_nodes=0,
                  additional_transformer=0, penalty=1,
-                 hybrid_lcoe=0, hybrid_investment=0,
+                 hybrid_lcoe=0, hybrid_investment=0, hybrid_opex=0, hybrid_npc=0,
                  get_investment_cost=False, hybrid=False):
         """Calculates the LCOE depending on the parameters. Optionally calculates the investment cost instead.
 
@@ -258,7 +258,8 @@ class Technology:
 
         grid_penalty_ratio = np.maximum(1, grid_penalty_ratio)
 
-        generation_per_year, peak_load, td_investment_cost = self.td_network_cost(people,
+        generation_per_year, peak_load, td_investment_cost,\
+            hv_km, mv_km, lv_km, service_transformers, substations= self.td_network_cost(people,
                                                                                   new_connections,
                                                                                   prev_code,
                                                                                   total_energy_per_cell,
@@ -360,12 +361,22 @@ class Technology:
         lcoe = pd.DataFrame(lcoe[:, np.newaxis])
         investment_cost = pd.DataFrame(investment_cost[:, np.newaxis])
 
+        generation_investments = capital_investment
+        if self.hybrid:
+            generation_investments += hybrid_investment * generation_per_year
+        else:
+            generation_investments += peak_load * self.grid_capacity_investment
+        generation_om = (cap_cost * penalty * self.om_costs * installed_capacity) + generation_per_year * fuel_cost + hybrid_opex
+
+        outputs = pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om], axis=1)
+        outputs.rename({})
+
         if get_investment_cost:
             return investment_cost
         elif self.hybrid:
-            return lcoe, investment_cost
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, hybrid_opex, pd.Series(np.sum(discounted_costs, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
         else:
-            return lcoe, investment_cost
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om, pd.Series(np.sum(discounted_costs, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
 
     def transmission_network(self, peak_load, additional_mv_line_length=0, additional_transformer=0,
                              mv_distribution=False):
@@ -652,7 +663,8 @@ class Technology:
                               no_of_mv_mv_substation * self.mv_mv_sub_station_cost +
                               no_of_mv_lv_substation * self.mv_lv_sub_station_cost) * penalty
 
-        return generation_per_year, peak_load, td_investment_cost
+        return generation_per_year, peak_load, td_investment_cost, hv_lines_total_length, (mv_lines_connection_length + mv_lines_distribution_length), total_lv_lines_length, \
+               num_transformers, (no_of_hv_lv_substation + no_of_hv_mv_substation + no_of_mv_mv_substation, no_of_mv_lv_substation)
 
 
 class SettlementProcessor:
@@ -1278,14 +1290,18 @@ class SettlementProcessor:
         """" ... """
 
         # logging.info('Define the initial electrification status')
-        grid_investment = np.zeros(len(self.df[SET_X_DEG]))
+
         prev_code = self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)].copy(deep=True)
 
         # Grid-electrified settlements
         electrified_loce, electrified_investment = self.get_grid_lcoe(0, 0, 0, year, time_step, end_year, grid_calc)
-        electrified_investment = electrified_investment[0]
-        grid_investment = np.where(self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1,
-                                   electrified_investment, grid_investment)
+        #electrified_investment = electrified_investment[0]
+
+        grid_investment = pd.DataFrame(np.zeros(shape=electrified_investment.shape))
+        for i in range(len(electrified_investment.columns)):
+            grid_investment[i] = np.where(self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1, electrified_investment.iloc[:, i], grid_investment[i])
+        # grid_investment = np.where(self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1,
+        #                            electrified_investment, 0)
 
         self.df[SET_LCOE_GRID + "{}".format(year)] = 99
         self.df.loc[self.df[SET_ELEC_FINAL_CODE + "{}".format(year - time_step)] == 1,
@@ -1304,7 +1320,7 @@ class SettlementProcessor:
         grid_connect_limit -= sum(self.df.loc[prev_code == 1]['Densification_connections'])
         del self.df['Densification_connections']
 
-        return pd.Series(grid_investment), grid_capacity_limit, grid_connect_limit
+        return grid_investment, grid_capacity_limit, grid_connect_limit
 
     def current_mv_line_dist(self):
         # logging.info('Determine current MV line length')
@@ -1554,14 +1570,14 @@ class SettlementProcessor:
         min_code_lcoes = self.df[SET_MIN_OFFGRID_LCOE + "{}".format(year)].copy(deep=True)
 
         grid_lcoe = grid_lcoe[0]
-        grid_investment = grid_investment[0]
+        #grid_investment = grid_investment[0]
         grid_lcoe.loc[electrified == 1] = 99
         grid_lcoe.loc[prev_dist + dist_adjusted > max_dist] = 99
         grid_lcoe.loc[grid_lcoe > new_lcoes] = 99
 
         if prio == 2:
             households = self.df[SET_NEW_CONNECTIONS + "{}".format(year)] / self.df[SET_NUM_PEOPLE_PER_HH]
-            grid_lcoe.loc[grid_investment / households > threshold] = 99
+            grid_lcoe.loc[grid_investment.iloc[:, 0] / households > threshold] = 99
 
         consumption = self.df[SET_ENERGY_PER_CELL + "{}".format(year)]  # kWh/year
         average_load = consumption / (1 - grid_calc.distribution_losses) / HOURS_PER_YEAR  # kW
@@ -1584,7 +1600,9 @@ class SettlementProcessor:
         elecorder = np.where(grid_lcoe < min_code_lcoes, new_elec_order, elecorder)
         electrified = np.where(grid_lcoe < min_code_lcoes, 1, electrified)
         new_lcoes = np.where(grid_lcoe < min_code_lcoes, grid_lcoe, new_lcoes)
-        new_investment = np.where(grid_lcoe < min_code_lcoes, grid_investment, new_investment)
+
+        for i in range(len(new_investment.columns)):
+            new_investment.iloc[:, i] = np.where(grid_lcoe < min_code_lcoes, grid_investment.iloc[:, i], new_investment.iloc[:, i])
 
         return grid_capacity_limit, grid_connect_limit, cell_path_real, cell_path_adjusted, elecorder, \
                electrified, new_lcoes, new_investment
@@ -1932,150 +1950,103 @@ class SettlementProcessor:
         ghi_range = np.round(np.arange(ghi_min, ghi_max + 100, 100), -2)
         diesel_range = np.round(np.arange(diesel_min, diesel_max + 0.1, 0.1), 1)
 
-        pv_hybrid_lcoe_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+        pv_hybrid_lcoe = {}
+        pv_hybrid_investment = {}
+        pv_hybrid_capacity = {}
+        pv_hybrid_ren_share = {}
+        pv_hybrid_emissions = {}
+
+        pv_hybrid_pv_capacity = {} # kW
+        pv_hybrid_diesel_capacity = {} # kW
+        pv_hybrid_battery_capacity = {} # kWh
+        pv_hybrid_battery_life = {} #  years
+        pv_hybrid_fuel_usage = {} # liter/year
+        pv_hybrid_opex = {}
+        pv_hybrid_npc = {}
+
+        tiers = self.df[SET_TIER].unique().tolist()
+        tiers.sort()
+
+        for t in tiers:
+            pv_hybrid_lcoe[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                         columns=ghi_range, index=diesel_range)
-        pv_hybrid_lcoe_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+            pv_hybrid_investment[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                         columns=ghi_range, index=diesel_range)
-        pv_hybrid_lcoe_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+            pv_hybrid_capacity[t] =  pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                         columns=ghi_range, index=diesel_range)
-        pv_hybrid_lcoe_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+            pv_hybrid_ren_share[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                         columns=ghi_range, index=diesel_range)
-        pv_hybrid_lcoe_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+            pv_hybrid_emissions[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                                  columns=ghi_range, index=diesel_range)
+            pv_hybrid_pv_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                         columns=ghi_range, index=diesel_range)
-
-        pv_hybrid_investment_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                              columns=ghi_range, index=diesel_range)
-        pv_hybrid_investment_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                              columns=ghi_range, index=diesel_range)
-        pv_hybrid_investment_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                              columns=ghi_range, index=diesel_range)
-        pv_hybrid_investment_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                              columns=ghi_range, index=diesel_range)
-        pv_hybrid_investment_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                              columns=ghi_range, index=diesel_range)
-
-        pv_hybrid_capacity_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                            columns=ghi_range, index=diesel_range)
-        pv_hybrid_capacity_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                            columns=ghi_range, index=diesel_range)
-        pv_hybrid_capacity_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                            columns=ghi_range, index=diesel_range)
-        pv_hybrid_capacity_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                            columns=ghi_range, index=diesel_range)
-        pv_hybrid_capacity_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                            columns=ghi_range, index=diesel_range)
-
-        pv_hybrid_ren_share_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_ren_share_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_ren_share_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_ren_share_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_ren_share_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+            pv_hybrid_diesel_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                        columns=ghi_range, index=diesel_range)
+            pv_hybrid_battery_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                        columns=ghi_range, index=diesel_range)
+            pv_hybrid_battery_life[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                        columns=ghi_range, index=diesel_range)
+            pv_hybrid_fuel_usage[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                        columns=ghi_range, index=diesel_range)
+            pv_hybrid_opex[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
+                                        columns=ghi_range, index=diesel_range)
+            pv_hybrid_npc[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
                                              columns=ghi_range, index=diesel_range)
 
-        pv_hybrid_emissions_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_emissions_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_emissions_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_emissions_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-        pv_hybrid_emissions_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(ghi_range))),
-                                             columns=ghi_range, index=diesel_range)
-
-        tiers = [1, 2, 3, 4, 5]
-
-        for g in ghi_range:
-            pv_hybrid_lcoe_1[g][:], \
-            pv_hybrid_investment_1[g][:], \
-            pv_hybrid_capacity_1[g][:], \
-            pv_hybrid_ren_share_1[g][:],\
-            pv_hybrid_emissions_1[g][:] = pv_diesel_hybrid(1, g, ghi_curve, temp, 1, start_year, end_year,
-                                                           diesel_range=diesel_range,
-                                                           pv_cost_factor=pv_panel_investment)
-
-            pv_hybrid_lcoe_2[g][:], \
-            pv_hybrid_investment_2[g][:], \
-            pv_hybrid_capacity_2[g][:], \
-            pv_hybrid_ren_share_2[g][:],\
-            pv_hybrid_emissions_2[g][:] = pv_diesel_hybrid(1, g, ghi_curve, temp, 2, start_year, end_year,
-                                                           diesel_range=diesel_range,
-                                                           pv_cost_factor=pv_panel_investment)
-
-            pv_hybrid_lcoe_3[g][:], \
-            pv_hybrid_investment_3[g][:], \
-            pv_hybrid_capacity_3[g][:], \
-            pv_hybrid_ren_share_3[g][:],\
-            pv_hybrid_emissions_3[g][:] = pv_diesel_hybrid(1, g, ghi_curve, temp, 3, start_year, end_year,
-                                                           diesel_range=diesel_range,
-                                                           pv_cost_factor=pv_panel_investment)
-
-            pv_hybrid_lcoe_4[g][:], \
-            pv_hybrid_investment_4[g][:], \
-            pv_hybrid_capacity_4[g][:], \
-            pv_hybrid_ren_share_4[g][:],\
-            pv_hybrid_emissions_4[g][:] = pv_diesel_hybrid(1, g, ghi_curve, temp, 4, start_year, end_year,
-                                                           diesel_range=diesel_range,
-                                                           pv_cost_factor=pv_panel_investment)
-
-            pv_hybrid_lcoe_5[g][:], \
-            pv_hybrid_investment_5[g][:], \
-            pv_hybrid_capacity_5[g][:], \
-            pv_hybrid_ren_share_5[g][:],\
-            pv_hybrid_emissions_5[g][:] = pv_diesel_hybrid(1, g, ghi_curve, temp, 5, start_year, end_year,
-                                                           diesel_range=diesel_range,
-                                                           pv_cost_factor=pv_panel_investment)
+            for g in ghi_range:
+                pv_hybrid_lcoe[t][g][:], \
+                pv_hybrid_investment[t][g][:], \
+                pv_hybrid_capacity[t][g][:], \
+                pv_hybrid_ren_share[t][g][:], \
+                pv_hybrid_emissions[t][g][:],\
+                pv_hybrid_pv_capacity[t][g][:],\
+                pv_hybrid_diesel_capacity[t][g][:], \
+                pv_hybrid_battery_capacity[t][g][:],\
+                pv_hybrid_battery_life[t][g][:],\
+                pv_hybrid_fuel_usage[t][g][:],\
+                pv_hybrid_opex[t][g][:], \
+                pv_hybrid_npc[t][g][:]= pv_diesel_hybrid(1, g, ghi_curve, temp, t, start_year, end_year,
+                                                               diesel_range=diesel_range,
+                                                               pv_cost_factor=pv_panel_investment)
 
         def local_hybrid(ghi, diesel, tier):
             ghi = round(ghi, -2)
             diesel = round(diesel, 1)
 
-            if tier == 1:
-                hybrid_lcoe = pv_hybrid_lcoe_1[ghi][diesel]
-                hybrid_investment = pv_hybrid_investment_1[ghi][diesel]
-                hybrid_capacity = pv_hybrid_capacity_1[ghi][diesel]
-                hybrid_renewable = pv_hybrid_ren_share_1[ghi][diesel]
-                hybrid_emissions = pv_hybrid_emissions_1[ghi][diesel]
-            elif tier == 2:
-                hybrid_lcoe = pv_hybrid_lcoe_2[ghi][diesel]
-                hybrid_investment = pv_hybrid_investment_2[ghi][diesel]
-                hybrid_capacity = pv_hybrid_capacity_2[ghi][diesel]
-                hybrid_renewable = pv_hybrid_ren_share_2[ghi][diesel]
-                hybrid_emissions = pv_hybrid_emissions_2[ghi][diesel]
-            elif tier == 3:
-                hybrid_lcoe = pv_hybrid_lcoe_3[ghi][diesel]
-                hybrid_investment = pv_hybrid_investment_3[ghi][diesel]
-                hybrid_capacity = pv_hybrid_capacity_3[ghi][diesel]
-                hybrid_renewable = pv_hybrid_ren_share_3[ghi][diesel]
-                hybrid_emissions = pv_hybrid_emissions_3[ghi][diesel]
-            elif tier == 4:
-                hybrid_lcoe = pv_hybrid_lcoe_4[ghi][diesel]
-                hybrid_investment = pv_hybrid_investment_4[ghi][diesel]
-                hybrid_capacity = pv_hybrid_capacity_4[ghi][diesel]
-                hybrid_renewable = pv_hybrid_ren_share_4[ghi][diesel]
-                hybrid_emissions = pv_hybrid_emissions_4[ghi][diesel]
-            elif tier == 5:
-                hybrid_lcoe = pv_hybrid_lcoe_5[ghi][diesel]
-                hybrid_investment = pv_hybrid_investment_5[ghi][diesel]
-                hybrid_capacity = pv_hybrid_capacity_5[ghi][diesel]
-                hybrid_renewable = pv_hybrid_ren_share_5[ghi][diesel]
-                hybrid_emissions = pv_hybrid_emissions_5[ghi][diesel]
+            hybrid_lcoe = pv_hybrid_lcoe[tier][ghi][diesel]
+            hybrid_investment = pv_hybrid_investment[tier][ghi][diesel]
+            hybrid_capacity = pv_hybrid_capacity[tier][ghi][diesel]
+            hybrid_renewable = pv_hybrid_ren_share[tier][ghi][diesel]
+            hybrid_emissions = pv_hybrid_emissions[tier][ghi][diesel]
 
-            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions
+            hybrid_pv_capacity = pv_hybrid_pv_capacity[tier][ghi][diesel]  # kW
+            hybrid_diesel_capacity = pv_hybrid_diesel_capacity[tier][ghi][diesel]  # kW
+            hybrid_battery_capacity = pv_hybrid_battery_capacity[tier][ghi][diesel]  # kWh
+            hybrid_battery_life = pv_hybrid_battery_life[tier][ghi][diesel]  # years
+            hybrid_fuel_usage = pv_hybrid_fuel_usage[tier][ghi][diesel]  # liter/year
+            hybrid_opex = pv_hybrid_opex[tier][ghi][diesel]
+            hybrid_npc = pv_hybrid_npc[tier][ghi][diesel]
+
+            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions, \
+                   hybrid_pv_capacity, hybrid_diesel_capacity, hybrid_battery_capacity, hybrid_battery_life, hybrid_fuel_usage, hybrid_opex, hybrid_npc
 
         hybrid_series = self.df.apply(
             lambda row: local_hybrid(row[SET_GHI], row[SET_MG_DIESEL_FUEL + "{}".format(year)], row[SET_TIER]), axis=1,
             result_type='expand')
 
         pv_hybrid_capacity = hybrid_series[2]
-        self.df['RenewableShare' + "{}".format(year)] = hybrid_series[3]
-        self.df['PVHybridGenCost' + "{}".format(year)] = hybrid_series[0]
-        self.df['PVHybridGenCap' + "{}".format(year)] = hybrid_series[1]
+        self.df['PVRenewableShare' + "{}".format(year)] = hybrid_series[3]
+        self.df['PVHybridGenCapex' + "{}".format(year)] = hybrid_series[1] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        #self.df['PVHybridGenCap' + "{}".format(year)] = hybrid_series[1]
         self.df['PVHybridEmissionFactor' + "{}".format(year)] = hybrid_series[4]
+
+        self.df['PVHybridPVCapacity' + "{}".format(year)] =  hybrid_series[5] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridDieselCapacity' + "{}".format(year)] = hybrid_series[6] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridBatteryCapacity' + "{}".format(year)] = hybrid_series[7] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridBatteryLife' + "{}".format(year)] = hybrid_series[8]
+        self.df['PVHybridDieselConsumption' + "{}".format(year)] = hybrid_series[9] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridGenOPEX'+ "{}".format(year)] = hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridGenNPC' + "{}".format(year)] = hybrid_series[11] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
 
         # logging.info('Calculate minigrid PV hybrid LCOE')
         self.df[SET_LCOE_MG_PV_HYBRID + "{}".format(year)], pv_hybrid_investment = \
@@ -2090,7 +2061,8 @@ class SettlementProcessor:
                                        grid_cell_area=self.df[SET_GRID_CELL_AREA],
                                        base_to_peak=self.df[SET_BASE_TO_PEAK],
                                        hybrid_lcoe=hybrid_series[0],
-                                       hybrid_investment=hybrid_series[1])
+                                       hybrid_investment=hybrid_series[1],
+                                       hybrid_opex=hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)])
 
         return pv_hybrid_investment, pv_hybrid_capacity
 
@@ -2105,151 +2077,103 @@ class SettlementProcessor:
         wind_range = np.round(np.arange(wind_min, wind_max + 1))
         diesel_range = np.round(np.arange(diesel_min, diesel_max + 0.1, 0.1), 1)
 
-        wind_hybrid_lcoe_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                          columns=wind_range, index=diesel_range)
-        wind_hybrid_lcoe_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                          columns=wind_range, index=diesel_range)
-        wind_hybrid_lcoe_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                          columns=wind_range, index=diesel_range)
-        wind_hybrid_lcoe_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                          columns=wind_range, index=diesel_range)
-        wind_hybrid_lcoe_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                          columns=wind_range, index=diesel_range)
+        wind_hybrid_lcoe = {}
+        wind_hybrid_investment = {}
+        wind_hybrid_capacity = {}
+        wind_hybrid_ren_share = {}
+        wind_hybrid_emissions = {}
 
-        wind_hybrid_investment_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                                columns=wind_range, index=diesel_range)
-        wind_hybrid_investment_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                                columns=wind_range, index=diesel_range)
-        wind_hybrid_investment_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                                columns=wind_range, index=diesel_range)
-        wind_hybrid_investment_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                                columns=wind_range, index=diesel_range)
-        wind_hybrid_investment_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                                columns=wind_range, index=diesel_range)
+        wind_hybrid_wind_capacity = {}  # kW
+        wind_hybrid_diesel_capacity = {}  # kW
+        wind_hybrid_battery_capacity = {}  # kWh
+        wind_hybrid_battery_life = {}  # years
+        wind_hybrid_fuel_usage = {}  # liter/year
+        wind_hybrid_opex = {} # USD/year
+        wind_hybrid_npc = {}
 
-        wind_hybrid_capacity_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                              columns=wind_range, index=diesel_range)
-        wind_hybrid_capacity_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                              columns=wind_range, index=diesel_range)
-        wind_hybrid_capacity_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                              columns=wind_range, index=diesel_range)
-        wind_hybrid_capacity_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                              columns=wind_range, index=diesel_range)
-        wind_hybrid_capacity_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                              columns=wind_range, index=diesel_range)
+        tiers = self.df[SET_TIER].unique().tolist()
+        tiers.sort()
 
-        wind_hybrid_ren_share_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+        for t in tiers:
+            wind_hybrid_lcoe[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
                                              columns=wind_range, index=diesel_range)
-        wind_hybrid_ren_share_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_ren_share_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_ren_share_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_ren_share_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
+            wind_hybrid_investment[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                   columns=wind_range, index=diesel_range)
+            wind_hybrid_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                 columns=wind_range, index=diesel_range)
+            wind_hybrid_ren_share[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                  columns=wind_range, index=diesel_range)
+            wind_hybrid_emissions[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                  columns=wind_range, index=diesel_range)
+            wind_hybrid_wind_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                    columns=wind_range, index=diesel_range)
+            wind_hybrid_diesel_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                        columns=wind_range, index=diesel_range)
+            wind_hybrid_battery_capacity[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                        columns=wind_range, index=diesel_range)
+            wind_hybrid_battery_life[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                     columns=wind_range, index=diesel_range)
+            wind_hybrid_fuel_usage[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                   columns=wind_range, index=diesel_range)
+            wind_hybrid_opex[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                                   columns=wind_range, index=diesel_range)
+            wind_hybrid_npc[t] = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
+                                               columns=wind_range, index=diesel_range)
 
-        wind_hybrid_emissions_1 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_emissions_2 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_emissions_3 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_emissions_4 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-        wind_hybrid_emissions_5 = pd.DataFrame(np.outer(np.zeros(len(diesel_range)), np.zeros(len(wind_range))),
-                                             columns=wind_range, index=diesel_range)
-
-        tiers = [1, 2, 3, 4, 5]
-
-        # logging.info('Start')
-
-        for w in wind_range:
-            wind_hybrid_lcoe_1[w][:], \
-            wind_hybrid_investment_1[w][:], \
-            wind_hybrid_capacity_1[w][:], \
-            wind_hybrid_ren_share_1[w][:], \
-            wind_hybrid_emissions_1[w][:] = wind_diesel_hybrid(1, w, wind_curve, 1, start_year, end_year,
-                                                              diesel_range=diesel_range)
-
-            wind_hybrid_lcoe_2[w][:], \
-            wind_hybrid_investment_2[w][:], \
-            wind_hybrid_capacity_2[w][:], \
-            wind_hybrid_ren_share_2[w][:], \
-            wind_hybrid_emissions_2[w][:] = wind_diesel_hybrid(1, w, wind_curve, 2, start_year, end_year,
-                                                              diesel_range=diesel_range)
-
-            wind_hybrid_lcoe_3[w][:], \
-            wind_hybrid_investment_3[w][:], \
-            wind_hybrid_capacity_3[w][:], \
-            wind_hybrid_ren_share_3[w][:], \
-            wind_hybrid_emissions_3[w][:] = wind_diesel_hybrid(1, w, wind_curve, 3, start_year, end_year,
-                                                              diesel_range=diesel_range)
-
-            wind_hybrid_lcoe_4[w][:], \
-            wind_hybrid_investment_4[w][:], \
-            wind_hybrid_capacity_4[w][:], \
-            wind_hybrid_ren_share_4[w][:], \
-            wind_hybrid_emissions_4[w][:] = wind_diesel_hybrid(1, w, wind_curve, 4, start_year, end_year,
-                                                              diesel_range=diesel_range)
-
-            wind_hybrid_lcoe_5[w][:], \
-            wind_hybrid_investment_5[w][:], \
-            wind_hybrid_capacity_5[w][:], \
-            wind_hybrid_ren_share_5[w][:], \
-            wind_hybrid_emissions_5[w][:] = wind_diesel_hybrid(1, w, wind_curve, 5, start_year, end_year,
-                                                              diesel_range=diesel_range)
-
-        # logging.info('Stop')
+            for w in wind_range:
+                wind_hybrid_lcoe[t][w][:], \
+                wind_hybrid_investment[t][w][:], \
+                wind_hybrid_capacity[t][w][:], \
+                wind_hybrid_ren_share[t][w][:], \
+                wind_hybrid_emissions[t][w][:], \
+                wind_hybrid_wind_capacity[t][w][:], \
+                wind_hybrid_diesel_capacity[t][w][:], \
+                wind_hybrid_battery_capacity[t][w][:], \
+                wind_hybrid_battery_life[t][w][:], \
+                wind_hybrid_fuel_usage[t][w][:],\
+                wind_hybrid_opex[t][w][:], \
+                wind_hybrid_npc[t][w][:]= wind_diesel_hybrid(1, w, wind_curve, t, start_year, end_year,
+                                                                   diesel_range=diesel_range)
 
         def local_hybrid(wind_vel, diesel, tier):
             wind_vel = round(wind_vel)
             diesel = round(diesel, 1)
 
-            if tier == 1:
-                hybrid_lcoe = wind_hybrid_lcoe_1[wind_vel][diesel]
-                hybrid_investment = wind_hybrid_investment_1[wind_vel][diesel]
-                hybrid_capacity = wind_hybrid_capacity_1[wind_vel][diesel]
-                hybrid_renewable = wind_hybrid_ren_share_1[wind_vel][diesel]
-                hybrid_emissions = wind_hybrid_emissions_1[wind_vel][diesel]
-            elif tier == 2:
-                hybrid_lcoe = wind_hybrid_lcoe_2[wind_vel][diesel]
-                hybrid_investment = wind_hybrid_investment_2[wind_vel][diesel]
-                hybrid_capacity = wind_hybrid_capacity_2[wind_vel][diesel]
-                hybrid_renewable = wind_hybrid_ren_share_2[wind_vel][diesel]
-                hybrid_emissions = wind_hybrid_emissions_2[wind_vel][diesel]
-            elif tier == 3:
-                hybrid_lcoe = wind_hybrid_lcoe_3[wind_vel][diesel]
-                hybrid_investment = wind_hybrid_investment_3[wind_vel][diesel]
-                hybrid_capacity = wind_hybrid_capacity_3[wind_vel][diesel]
-                hybrid_renewable = wind_hybrid_ren_share_3[wind_vel][diesel]
-                hybrid_emissions = wind_hybrid_emissions_3[wind_vel][diesel]
-            elif tier == 4:
-                hybrid_lcoe = wind_hybrid_lcoe_4[wind_vel][diesel]
-                hybrid_investment = wind_hybrid_investment_4[wind_vel][diesel]
-                hybrid_capacity = wind_hybrid_capacity_4[wind_vel][diesel]
-                hybrid_renewable = wind_hybrid_ren_share_4[wind_vel][diesel]
-                hybrid_emissions = wind_hybrid_emissions_4[wind_vel][diesel]
-            elif tier == 5:
-                hybrid_lcoe = wind_hybrid_lcoe_5[wind_vel][diesel]
-                hybrid_investment = wind_hybrid_investment_5[wind_vel][diesel]
-                hybrid_capacity = wind_hybrid_capacity_5[wind_vel][diesel]
-                hybrid_renewable = wind_hybrid_ren_share_5[wind_vel][diesel]
-                hybrid_emissions = wind_hybrid_emissions_5[wind_vel][diesel]
+            hybrid_lcoe = wind_hybrid_lcoe[tier][wind_vel][diesel]
+            hybrid_investment = wind_hybrid_investment[tier][wind_vel][diesel]
+            hybrid_capacity = wind_hybrid_capacity[tier][wind_vel][diesel]
+            hybrid_renewable = wind_hybrid_ren_share[tier][wind_vel][diesel]
+            hybrid_emissions = wind_hybrid_emissions[tier][wind_vel][diesel]
 
-            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions
+            hybrid_wind_capacity = wind_hybrid_wind_capacity[tier][wind_vel][diesel]  # kW
+            hybrid_diesel_capacity = wind_hybrid_diesel_capacity[tier][wind_vel][diesel]  # kW
+            hybrid_battery_capacity = wind_hybrid_battery_capacity[tier][wind_vel][diesel]  # kWh
+            hybrid_battery_life = wind_hybrid_battery_life[tier][wind_vel][diesel]  # years
+            hybrid_fuel_usage = wind_hybrid_fuel_usage[tier][wind_vel][diesel]  # liter/year
+            hybrid_opex = wind_hybrid_opex[tier][wind_vel][diesel]
+            hybrid_npc = wind_hybrid_npc[tier][wind_vel][diesel]
+
+            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions, \
+                   hybrid_wind_capacity, hybrid_diesel_capacity, hybrid_battery_capacity, hybrid_battery_life, hybrid_fuel_usage, hybrid_opex, hybrid_npc
+
 
         hybrid_series = self.df.apply(
             lambda row: local_hybrid(row[SET_WINDVEL], row[SET_MG_DIESEL_FUEL + "{}".format(year)], row[SET_TIER]),
             axis=1, result_type='expand')
 
-        #self.df['WindHybridEmissionFactor' + "{}".format(year)]
-
         wind_hybrid_capacity = hybrid_series[2]
         self.df['WindRenewableShare' + "{}".format(year)] = hybrid_series[3]
-        self.df['WindHybridGenCost' + "{}".format(year)] = hybrid_series[0]
-        self.df['WindHybridGenCap' + "{}".format(year)] = hybrid_series[1]
+        self.df['WindHybridGenCapex' + "{}".format(year)] = hybrid_series[0]
+        #self.df['WindHybridGenCap' + "{}".format(year)] = hybrid_series[1]
         self.df['WindHybridEmissionFactor' + "{}".format(year)] = hybrid_series[4]
+
+        self.df['WindHybridWindCapacity' + "{}".format(year)] = hybrid_series[5] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridDieselCapacity' + "{}".format(year)] = hybrid_series[6] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridBatteryCapacity' + "{}".format(year)] = hybrid_series[7] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridBatteryLife' + "{}".format(year)] = hybrid_series[8]
+        self.df['WindHybridDieselConsumption' + "{}".format(year)] = hybrid_series[9] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridGenOPEX' + "{}".format(year)] = hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridGenNPC' + "{}".format(year)] = hybrid_series[11] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
 
         # logging.info('Calculate minigrid Wind hybrid LCOE')
         self.df[SET_LCOE_MG_WIND_HYBRID + "{}".format(year)], wind_hybrid_investment = \
@@ -2264,7 +2188,8 @@ class SettlementProcessor:
                                          grid_cell_area=self.df[SET_GRID_CELL_AREA],
                                          base_to_peak=self.df[SET_BASE_TO_PEAK],
                                          hybrid_lcoe=hybrid_series[0],
-                                         hybrid_investment=hybrid_series[1])
+                                         hybrid_investment=hybrid_series[1],
+                                         hybrid_opex=hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)])
 
         return wind_hybrid_investment, wind_hybrid_capacity
 
@@ -2567,20 +2492,24 @@ class SettlementProcessor:
 
         self.df[SET_INVESTMENT_COST + "{}".format(year)] = 0
 
-        grid = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 1, 1, 0))
-        sa_diesel = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 2, 1, 0))
-        sa_pv = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 3, 1, 0))
-        mg_diesel = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 4, 1, 0))
-        mg_pv = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 5, 1, 0))
-        mg_wind = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 6, 1, 0))
-        mg_hydro = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 7, 1, 0))
-        mg_pv_hybrid = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 8, 1, 0))
-        mg_wind_hybrid = pd.DataFrame(np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 9, 1, 0))
+        grid = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 1, 1, 0)
+        sa_diesel = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 2, 1, 0)
+        sa_pv = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 3, 1, 0)
+        mg_diesel = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 4, 1, 0)
+        mg_pv = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 5, 1, 0)
+        mg_wind = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 6, 1, 0)
+        mg_hydro = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 7, 1, 0)
+        mg_pv_hybrid = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 8, 1, 0)
+        mg_wind_hybrid = np.where(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 9, 1, 0)
 
-        self.df[SET_INVESTMENT_COST + "{}".format(year)] = grid * grid_investment + sa_diesel * sa_diesel_investment + \
-                                                           sa_pv * sa_pv_investment + mg_diesel * mg_diesel_investment + mg_pv * mg_pv_investment + \
-                                                           mg_wind * mg_wind_investment + mg_hydro * mg_hydro_investment + mg_pv_hybrid * mg_pv_hybrid_investment + \
-                                                           mg_wind_hybrid * mg_wind_hybrid_investment
+        output_columns = [SET_INVESTMENT_COST, 'TD_Capex', 'TD_OPEX', 'Generation_Capex', 'Generation_OPEX', 'NPC', 'HV_km', 'MV_km', 'LV_km', 'Service_transformers'] #, 'Substations']
+
+        for i, c in zip(range(len(grid_investment.columns)), output_columns):
+
+            self.df[c + "{}".format(year)] = grid * grid_investment.iloc[:, i] + sa_diesel * sa_diesel_investment.iloc[:, i] + \
+                                                               sa_pv * sa_pv_investment.iloc[:, i] + mg_diesel * mg_diesel_investment.iloc[:, i] + mg_pv * mg_pv_investment.iloc[:, i] + \
+                                                               mg_wind * mg_wind_investment.iloc[:, i] + mg_hydro * mg_hydro_investment.iloc[:, i] + mg_pv_hybrid * mg_pv_hybrid_investment.iloc[:, i] + \
+                                                               mg_wind_hybrid * mg_wind_hybrid_investment.iloc[:, i]
 
     def apply_limitations(self, eleclimit, year, time_step, prioritization, auto_densification=0):
 
