@@ -122,8 +122,10 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
     """
 
+    #scenario_info = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emissions-2-specs.xlsx', sheet_name='ScenarioInfo')
     scenario_info = pd.read_excel(specs_path, sheet_name='ScenarioInfo')
     scenarios = scenario_info['Scenario']
+
     scenario_parameters = pd.read_excel(specs_path, sheet_name='ScenarioParameters')
     specs_data = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(specs_data.loc[0, SPE_COUNTRY])
@@ -132,7 +134,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')
 
     for scenario in scenarios:
-        print('Scenario: ' + str(scenario + 1),  time.ctime())
+        # print('Scenario: ' + str(scenario + 1),  time.ctime())
         country_id = specs_data.iloc[0]['CountryCode']
 
         # Productive uses lever
@@ -181,7 +183,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
                 grid_emission_factor = grid_emission_factors.loc[country_id]['NP_Low_CT']
             if int(tier_index) == 2:
                 grid_price = grid_generation_costs.loc[country_id]['NP_High_CT']
-            grid_emission_factor = grid_emission_factors.loc[country_id]['NP_High_CT']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['NP_High_CT']
 
         ## RUN_PARAM: Make sure the path to the resource data is set up properly here
         #wind_path = os.path.join(r'..\test_data', '{}-2-wind.csv'.format(country_id))

@@ -9,6 +9,7 @@ from tkinter import filedialog, messagebox
 import pandas as pd
 from runner import calibration, scenario
 import os
+import shutil
 
 root = tk.Tk()
 root.withdraw()
@@ -17,7 +18,8 @@ root.attributes("-topmost", True)
 #choice = int(input('Enter 1 to prepare/calibrate the GIS input file, 2 to run scenario(s): '))
 choice = 2
 
-countries = ['bj']
+countries = ['ug']
+print(countries)
 
 for country in countries:
     # messagebox.showinfo('OnSSET', 'Open the specs file')
@@ -54,6 +56,9 @@ for country in countries:
         except FileExistsError:
             pass
         results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
+
+        #shutil.unpack_archive(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results.zip'.format(country), r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country))
+        #results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
 
         try:
             os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\summaries'.format(country))

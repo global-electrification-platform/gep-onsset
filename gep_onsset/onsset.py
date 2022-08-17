@@ -2562,7 +2562,7 @@ class SettlementProcessor:
         self.df.loc[(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 1) & (self.df[SET_LIMIT + "{}".format(year)] == 0), SET_MIN_GRID_DIST + "{}".format(year)] = 0
         self.df.loc[(self.df[SET_MIN_OVERALL_CODE + "{}".format(year)] == 1) & (self.df[SET_LIMIT + "{}".format(year)] == 0), SET_MV_CONNECT_DIST] = 0
 
-        print("Le taux d'électrification atteint en {} est {:.1f} %".format(year, elecrate * 100))
+        #print("Le taux d'électrification atteint en {} est {:.1f} %".format(year, elecrate * 100))
 
     def calculate_new_capacity(self, mg_pv_hybrid_capacity, mg_wind_hybrid_capacity, mg_hydro_calc, mg_wind_calc,
                                mg_pv_calc, sa_pv_calc, mg_diesel_calc, sa_diesel_calc, grid_calc, year):
