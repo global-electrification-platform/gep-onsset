@@ -2017,7 +2017,7 @@ class SettlementProcessor:
             hybrid_investment = pv_hybrid_investment[tier][ghi][diesel]
             hybrid_capacity = pv_hybrid_capacity[tier][ghi][diesel]
             hybrid_renewable = pv_hybrid_ren_share[tier][ghi][diesel]
-            hybrid_emissions = pv_hybrid_emissions[tier][ghi][diesel]
+            hybrid_emissions = pv_hybrid_emissions[tier][ghi][diesel]  # ToDo check emissions
 
             hybrid_pv_capacity = pv_hybrid_pv_capacity[tier][ghi][diesel]  # kW
             hybrid_diesel_capacity = pv_hybrid_diesel_capacity[tier][ghi][diesel]  # kW

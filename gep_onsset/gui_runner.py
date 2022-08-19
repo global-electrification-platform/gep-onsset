@@ -18,7 +18,7 @@ root.attributes("-topmost", True)
 #choice = int(input('Enter 1 to prepare/calibrate the GIS input file, 2 to run scenario(s): '))
 choice = 2
 
-countries = ['ug']
+countries = ['ng']
 print(countries)
 
 for country in countries:
@@ -51,14 +51,14 @@ for country in countries:
         #print(calibrated_csv_path)
         #messagebox.showinfo('OnSSET', 'Browse to RESULTS folder to save outputs')
         #results_folder = filedialog.askdirectory()
-        try:
-            os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country))
-        except FileExistsError:
-            pass
-        results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
+        # try:
+        #     os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country))
+        # except FileExistsError:
+        #     pass
+        # results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
 
-        #shutil.unpack_archive(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results.zip'.format(country), r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country))
-        #results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
+        shutil.unpack_archive(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results.zip'.format(country), r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country))
+        results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\results'.format(country)
 
         try:
             os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\summaries'.format(country))
