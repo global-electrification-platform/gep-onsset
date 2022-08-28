@@ -2,7 +2,6 @@ import logging
 from math import exp, log, pi
 from typing import Dict
 import scipy.spatial
-import os
 from hybrids_pv import read_environmental_data, pv_diesel_hybrid
 from hybrids_wind import read_wind_environmental_data, wind_diesel_hybrid
 
@@ -1940,7 +1939,6 @@ class SettlementProcessor:
 
     def calculate_pv_hybrids_lcoe(self, year, start_year, end_year, time_step, mg_pv_hybrid_calc,
                                   pv_panel_investment, pv_path):
-
         ghi_curve, temp = read_environmental_data(pv_path)
 
         ghi_min = round(min(self.df[SET_GHI]), -2)
@@ -2009,44 +2007,57 @@ class SettlementProcessor:
                                                                diesel_range=diesel_range,
                                                                pv_cost_factor=pv_panel_investment)
 
-        def local_hybrid(ghi, diesel, tier):
-            ghi = round(ghi, -2)
-            diesel = round(diesel, 1)
+        self.df['PVRenewableShare' + "{}".format(year)] = 99
+        self.df['PVHybridGenCapex' + "{}".format(year)] = 99
+        self.df['PVHybridEmissionFactor' + "{}".format(year)] = 99
+        self.df['PVHybridPVCapacity' + "{}".format(year)] = 99
+        self.df['PVHybridDieselCapacity' + "{}".format(year)] = 99
+        self.df['PVHybridBatteryCapacity' + "{}".format(year)] = 99
+        self.df['PVHybridBatteryLife' + "{}".format(year)] = 99
+        self.df['PVHybridDieselConsumption' + "{}".format(year)] = 99
+        self.df['PVHybridGenOPEX' + "{}".format(year)] = 99
+        self.df['PVHybridGenNPC' + "{}".format(year)] = 99
+        self.df['PVHybridGenLCOE' + "{}".format(year)] = 99
+        self.df['PVHybridCapacity' + "{}".format(year)] = 99
 
-            hybrid_lcoe = pv_hybrid_lcoe[tier][ghi][diesel]
-            hybrid_investment = pv_hybrid_investment[tier][ghi][diesel]
-            hybrid_capacity = pv_hybrid_capacity[tier][ghi][diesel]
-            hybrid_renewable = pv_hybrid_ren_share[tier][ghi][diesel]
-            hybrid_emissions = pv_hybrid_emissions[tier][ghi][diesel]  # ToDo check emissions
+        parameters = ['PVRenewableShare' + "{}".format(year),
+                      'PVHybridGenCapex' + "{}".format(year),
+                      'PVHybridEmissionFactor' + "{}".format(year),
+                      'PVHybridPVCapacity' + "{}".format(year),
+                      'PVHybridDieselCapacity' + "{}".format(year),
+                      'PVHybridBatteryCapacity' + "{}".format(year),
+                      'PVHybridBatteryLife' + "{}".format(year),
+                      'PVHybridDieselConsumption' + "{}".format(year),
+                      'PVHybridGenOPEX' + "{}".format(year),
+                      'PVHybridGenNPC' + "{}".format(year),
+                      'PVHybridGenLCOE' + "{}".format(year),
+                      'PVHybridCapacity' + "{}".format(year)]
 
-            hybrid_pv_capacity = pv_hybrid_pv_capacity[tier][ghi][diesel]  # kW
-            hybrid_diesel_capacity = pv_hybrid_diesel_capacity[tier][ghi][diesel]  # kW
-            hybrid_battery_capacity = pv_hybrid_battery_capacity[tier][ghi][diesel]  # kWh
-            hybrid_battery_life = pv_hybrid_battery_life[tier][ghi][diesel]  # years
-            hybrid_fuel_usage = pv_hybrid_fuel_usage[tier][ghi][diesel]  # liter/year
-            hybrid_opex = pv_hybrid_opex[tier][ghi][diesel]
-            hybrid_npc = pv_hybrid_npc[tier][ghi][diesel]
+        for d in diesel_range:
+            for g in ghi_range:
+                for t in tiers:
+                    tables = [pv_hybrid_ren_share[t][g][d],
+                              pv_hybrid_investment[t][g][d],
+                              pv_hybrid_emissions[t][g][d],
+                              pv_hybrid_pv_capacity[t][g][d],
+                              pv_hybrid_diesel_capacity[t][g][d],
+                              pv_hybrid_battery_capacity[t][g][d],
+                              pv_hybrid_battery_life[t][g][d],
+                              pv_hybrid_fuel_usage[t][g][d],
+                              pv_hybrid_opex[t][g][d],
+                              pv_hybrid_npc[t][g][d],
+                              pv_hybrid_lcoe[t][g][d],
+                              pv_hybrid_capacity[t][g][d]]
 
-            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions, \
-                   hybrid_pv_capacity, hybrid_diesel_capacity, hybrid_battery_capacity, hybrid_battery_life, hybrid_fuel_usage, hybrid_opex, hybrid_npc
+                    self.df.loc[(self.df[SET_TIER] == t) & (round(self.df[SET_GHI], -2) == g) & (round(self.df[SET_MG_DIESEL_FUEL + "{}".format(year)], 1) == d), parameters] = tables
 
-        hybrid_series = self.df.apply(
-            lambda row: local_hybrid(row[SET_GHI], row[SET_MG_DIESEL_FUEL + "{}".format(year)], row[SET_TIER]), axis=1,
-            result_type='expand')
-
-        pv_hybrid_capacity = hybrid_series[2]
-        self.df['PVRenewableShare' + "{}".format(year)] = hybrid_series[3]
-        self.df['PVHybridGenCapex' + "{}".format(year)] = hybrid_series[1] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        #self.df['PVHybridGenCap' + "{}".format(year)] = hybrid_series[1]
-        self.df['PVHybridEmissionFactor' + "{}".format(year)] = hybrid_series[4]
-
-        self.df['PVHybridPVCapacity' + "{}".format(year)] =  hybrid_series[5] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['PVHybridDieselCapacity' + "{}".format(year)] = hybrid_series[6] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['PVHybridBatteryCapacity' + "{}".format(year)] = hybrid_series[7] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['PVHybridBatteryLife' + "{}".format(year)] = hybrid_series[8]
-        self.df['PVHybridDieselConsumption' + "{}".format(year)] = hybrid_series[9] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['PVHybridGenOPEX'+ "{}".format(year)] = hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['PVHybridGenNPC' + "{}".format(year)] = hybrid_series[11] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridDieselConsumption' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridGenOPEX' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridGenNPC' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridPVCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridDieselCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridBatteryCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['PVHybridCapacity' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
 
         # logging.info('Calculate minigrid PV hybrid LCOE')
         self.df[SET_LCOE_MG_PV_HYBRID + "{}".format(year)], pv_hybrid_investment = \
@@ -2060,14 +2071,14 @@ class SettlementProcessor:
                                        num_people_per_hh=self.df[SET_NUM_PEOPLE_PER_HH],
                                        grid_cell_area=self.df[SET_GRID_CELL_AREA],
                                        base_to_peak=self.df[SET_BASE_TO_PEAK],
-                                       hybrid_lcoe=hybrid_series[0],
-                                       hybrid_investment=hybrid_series[1],
-                                       hybrid_opex=hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)])
+                                       hybrid_lcoe=self.df['PVHybridGenLCOE' + '{}'.format(year)],
+                                       hybrid_investment=self.df['PVHybridGenCapex' + '{}'.format(year)],
+                                       hybrid_opex=self.df['PVHybridGenOPEX' + '{}'.format(year)])
 
-        return pv_hybrid_investment, pv_hybrid_capacity
+        self.df['PVHybridGenCapex' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        return pv_hybrid_investment, self.df['PVHybridCapacity' + '{}'.format(year)]
 
     def calculate_wind_hybrids_lcoe(self, year, start_year, end_year, time_step, mg_wind_hybrid_calc, wind_path):
-
         wind_curve = read_wind_environmental_data(wind_path)
 
         wind_min = round(min(self.df[SET_WINDVEL]))
@@ -2135,45 +2146,57 @@ class SettlementProcessor:
                 wind_hybrid_npc[t][w][:]= wind_diesel_hybrid(1, w, wind_curve, t, start_year, end_year,
                                                                    diesel_range=diesel_range)
 
-        def local_hybrid(wind_vel, diesel, tier):
-            wind_vel = round(wind_vel)
-            diesel = round(diesel, 1)
+        self.df['WindRenewableShare' + "{}".format(year)] = 99
+        self.df['WindHybridGenCapex' + "{}".format(year)] = 99
+        self.df['WindHybridEmissionFactor' + "{}".format(year)] = 99
+        self.df['WindHybridWindCapacity' + "{}".format(year)] = 99
+        self.df['WindHybridDieselCapacity' + "{}".format(year)] = 99
+        self.df['WindHybridBatteryCapacity' + "{}".format(year)] = 99
+        self.df['WindHybridBatteryLife' + "{}".format(year)] = 99
+        self.df['WindHybridDieselConsumption' + "{}".format(year)] = 99
+        self.df['WindHybridGenOPEX' + "{}".format(year)] = 99
+        self.df['WindHybridGenNPC' + "{}".format(year)] = 99
+        self.df['WindHybridGenLCOE' + "{}".format(year)] = 99
+        self.df['WindHybridCapacity' + "{}".format(year)] = 99
 
-            hybrid_lcoe = wind_hybrid_lcoe[tier][wind_vel][diesel]
-            hybrid_investment = wind_hybrid_investment[tier][wind_vel][diesel]
-            hybrid_capacity = wind_hybrid_capacity[tier][wind_vel][diesel]
-            hybrid_renewable = wind_hybrid_ren_share[tier][wind_vel][diesel]
-            hybrid_emissions = wind_hybrid_emissions[tier][wind_vel][diesel]
+        parameters = ['WindRenewableShare' + "{}".format(year),
+                      'WindHybridGenCapex' + "{}".format(year),
+                      'WindHybridEmissionFactor' + "{}".format(year),
+                      'WindHybridWindCapacity' + "{}".format(year),
+                      'WindHybridDieselCapacity' + "{}".format(year),
+                      'WindHybridBatteryCapacity' + "{}".format(year),
+                      'WindHybridBatteryLife' + "{}".format(year),
+                      'WindHybridDieselConsumption' + "{}".format(year),
+                      'WindHybridGenOPEX' + "{}".format(year),
+                      'WindHybridGenNPC' + "{}".format(year),
+                      'WindHybridGenLCOE' + "{}".format(year),
+                      'WindHybridCapacity' + "{}".format(year)]
 
-            hybrid_wind_capacity = wind_hybrid_wind_capacity[tier][wind_vel][diesel]  # kW
-            hybrid_diesel_capacity = wind_hybrid_diesel_capacity[tier][wind_vel][diesel]  # kW
-            hybrid_battery_capacity = wind_hybrid_battery_capacity[tier][wind_vel][diesel]  # kWh
-            hybrid_battery_life = wind_hybrid_battery_life[tier][wind_vel][diesel]  # years
-            hybrid_fuel_usage = wind_hybrid_fuel_usage[tier][wind_vel][diesel]  # liter/year
-            hybrid_opex = wind_hybrid_opex[tier][wind_vel][diesel]
-            hybrid_npc = wind_hybrid_npc[tier][wind_vel][diesel]
+        for d in diesel_range:
+            for w in wind_range:
+                for t in tiers:
+                    tables = [wind_hybrid_ren_share[t][w][d],
+                              wind_hybrid_investment[t][w][d],
+                              wind_hybrid_emissions[t][w][d],
+                              wind_hybrid_wind_capacity[t][w][d],
+                              wind_hybrid_diesel_capacity[t][w][d],
+                              wind_hybrid_battery_capacity[t][w][d],
+                              wind_hybrid_battery_life[t][w][d],
+                              wind_hybrid_fuel_usage[t][w][d],
+                              wind_hybrid_opex[t][w][d],
+                              wind_hybrid_npc[t][w][d],
+                              wind_hybrid_lcoe[t][w][d],
+                              wind_hybrid_capacity[t][w][d]]
 
-            return hybrid_lcoe, hybrid_investment, hybrid_capacity, hybrid_renewable, hybrid_emissions, \
-                   hybrid_wind_capacity, hybrid_diesel_capacity, hybrid_battery_capacity, hybrid_battery_life, hybrid_fuel_usage, hybrid_opex, hybrid_npc
+                    self.df.loc[(self.df[SET_TIER] == t) & (round(self.df[SET_WINDVEL]) == w) & (round(self.df[SET_MG_DIESEL_FUEL + "{}".format(year)], 1) == d), parameters] = tables
 
-
-        hybrid_series = self.df.apply(
-            lambda row: local_hybrid(row[SET_WINDVEL], row[SET_MG_DIESEL_FUEL + "{}".format(year)], row[SET_TIER]),
-            axis=1, result_type='expand')
-
-        wind_hybrid_capacity = hybrid_series[2]
-        self.df['WindRenewableShare' + "{}".format(year)] = hybrid_series[3]
-        self.df['WindHybridGenCapex' + "{}".format(year)] = hybrid_series[0]
-        #self.df['WindHybridGenCap' + "{}".format(year)] = hybrid_series[1]
-        self.df['WindHybridEmissionFactor' + "{}".format(year)] = hybrid_series[4]
-
-        self.df['WindHybridWindCapacity' + "{}".format(year)] = hybrid_series[5] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['WindHybridDieselCapacity' + "{}".format(year)] = hybrid_series[6] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['WindHybridBatteryCapacity' + "{}".format(year)] = hybrid_series[7] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['WindHybridBatteryLife' + "{}".format(year)] = hybrid_series[8]
-        self.df['WindHybridDieselConsumption' + "{}".format(year)] = hybrid_series[9] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['WindHybridGenOPEX' + "{}".format(year)] = hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
-        self.df['WindHybridGenNPC' + "{}".format(year)] = hybrid_series[11] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridDieselConsumption' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridGenOPEX' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridGenNPC' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridWindCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridDieselCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridBatteryCapacity' + "{}".format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        self.df['WindHybridCapacity' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
 
         # logging.info('Calculate minigrid Wind hybrid LCOE')
         self.df[SET_LCOE_MG_WIND_HYBRID + "{}".format(year)], wind_hybrid_investment = \
@@ -2187,11 +2210,12 @@ class SettlementProcessor:
                                          num_people_per_hh=self.df[SET_NUM_PEOPLE_PER_HH],
                                          grid_cell_area=self.df[SET_GRID_CELL_AREA],
                                          base_to_peak=self.df[SET_BASE_TO_PEAK],
-                                         hybrid_lcoe=hybrid_series[0],
-                                         hybrid_investment=hybrid_series[1],
-                                         hybrid_opex=hybrid_series[10] * self.df[SET_ENERGY_PER_CELL + "{}".format(year)])
+                                         hybrid_lcoe=self.df['WindHybridGenLCOE' + '{}'.format(year)],
+                                         hybrid_investment=self.df['WindHybridGenCapex' + '{}'.format(year)],
+                                         hybrid_opex=self.df['WindHybridGenOPEX' + '{}'.format(year)])
 
-        return wind_hybrid_investment, wind_hybrid_capacity
+        self.df['WindHybridGenCapex' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
+        return wind_hybrid_investment, self.df['WindHybridCapacity' + '{}'.format(year)]
 
     def calculate_off_grid_lcoes(self, mg_hydro_calc, mg_wind_calc, mg_pv_calc, sa_pv_calc, mg_diesel_calc,
                                  sa_diesel_calc, year, end_year, time_step, diesel_techs=0):

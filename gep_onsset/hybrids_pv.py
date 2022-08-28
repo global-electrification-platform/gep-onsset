@@ -68,6 +68,7 @@ def pv_diesel_capacities(pv_capacity, battery_size, diesel_capacity, hour_number
             #  Maximum amount of diesel needed to supply load and charge battery
             # Diesel genrator limited by lowest possible capacity (40%) and rated capacity
             max_diesel = max(min(net_load + battery_chargeable, diesel_capacity), 0.4 * diesel_capacity)
+            max_diesel = max(min(net_load + battery_chargeable, diesel_capacity), 0.4 * diesel_capacity)
 
             if net_load > 0:
                 diesel_gen = max_diesel
@@ -332,6 +333,9 @@ def pv_diesel_hybrid(
                 d += 1
                 diesel_share[b][p][d], battery_life[b][p][d], lpsp[b][p][d], fuel_usage[b][p][d], excess_gen[b][p][d] = pv_diesel_capacities(pc, bc, dc, hour_numbers, temp[:, 0], ghi[:, 0], load_curve, k_t, inv_eff, n_dis, n_chg, energy_per_hh)
 
+                battery_size[b][p][d] = bc
+                pv_panel_size[b][p][d] = pc
+                diesel_capacity[b][p][d] = dc
 
 
     diesel_limit = 0.5
@@ -371,10 +375,10 @@ def pv_diesel_hybrid(
                 for dc in diesel_caps:
                     d += 1
 
-        lcoe[b][p][d], investment[b][p][d], emissions[b][p][d], opex[b][p][d], npc[b][p][d] = calculate_hybrid_lcoe(di, end_year, start_year, energy_per_hh,
-                              fuel_usage[b][p][d], pc, pv_cost, charge_controller, pv_om, dc,
-                              diesel_cost, diesel_om, inverter_life, load_curve, inverter_cost, diesel_life, pv_life, battery_life[b][p][d],
-                              bc, battery_cost, dod_max, discount_rate)
+                    lcoe[b][p][d], investment[b][p][d], emissions[b][p][d], opex[b][p][d], npc[b][p][d] = calculate_hybrid_lcoe(di, end_year, start_year, energy_per_hh,
+                                          fuel_usage[b][p][d], pc, pv_cost, charge_controller, pv_om, dc,
+                                          diesel_cost, diesel_om, inverter_life, load_curve, inverter_cost, diesel_life, pv_life, battery_life[b][p][d],
+                                          bc, battery_cost, dod_max, discount_rate)
 
         # lcoe, investment, emissions, opex, npc = calculate_hybrid_lcoe(d)
         lcoe = np.where(lpsp > lpsp_max, 99, lcoe)

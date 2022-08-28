@@ -324,17 +324,22 @@ def wind_diesel_hybrid(
     #     return diesel_share, battery_life, condition, fuel_result, excess_gen
 
     # This section creates the range of wind capacities, diesel capacities and battery sizes to be simulated
-    ref = 5 * load_curve[19]
+    ref = 10 * load_curve[19]
 
     battery_sizes = [0.5 * energy_per_hh / 365, energy_per_hh / 365, 2 * energy_per_hh / 365]
     wind_caps = []
     diesel_caps = []
+    #diesel_extend = np.ones(wind_no)
+    #wind_extend = np.ones(diesel_no)
 
     for i in np.arange(wind_no):
         wind_caps.append(ref * (wind_no - i) / wind_no)
 
     for j in np.arange(diesel_no):
         diesel_caps.append(j * max(load_curve) / diesel_no)
+
+    #wind_caps = np.outer(np.array(wind_caps), wind_extend)
+    #diesel_caps = np.outer(diesel_extend, np.array(diesel_caps))
 
     # This section creates 2d-arrays to store information on wind capacities, diesel capacities, battery sizes,
     # fuel usage, battery life and LPSP
@@ -349,10 +354,10 @@ def wind_diesel_hybrid(
     fuel_usage = np.zeros((len(battery_sizes), wind_no, diesel_no))
     excess_gen = np.zeros((len(battery_sizes), wind_no, diesel_no))
 
-    for j in np.arange(len(battery_sizes)):
-        battery_size[j, :, :] *= battery_sizes[j]
-        wind_panel_size[j, :, :] = wind_caps
-        diesel_capacity[j, :, :] = diesel_caps
+    # for j in np.arange(len(battery_sizes)):
+    #     battery_size[j, :, :] *= battery_sizes[j]
+    #     wind_panel_size[j, :, :] = wind_caps
+    #     diesel_capacity[j, :, :] = diesel_caps
 
     # For the number of diesel, wind and battery capacities the lpsp, battery lifetime, fuel usage and LPSP is calculated
     p = -1
@@ -380,6 +385,11 @@ def wind_diesel_hybrid(
                 d += 1
                 diesel_share[b][p][d], battery_life[b][p][d], lpsp[b][p][d], \
                 fuel_usage[b][p][d], excess_gen[b][p][d] = wind_diesel_capacities(wc, bc, dc, hour_numbers, load_curve, inverter_efficiency, n_dis, n_chg, energy_per_hh, wind_power[:, 0], p_rated)
+
+                battery_size[b][p][d] = bc
+                wind_panel_size[b][p][d] = wc
+                diesel_capacity[b][p][d] = dc
+
 
 
     def calculate_hybrid_lcoe(diesel_price):
