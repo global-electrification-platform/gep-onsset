@@ -129,7 +129,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
     """
 
-    #scenario_info = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emissions-2-specs.xlsx', sheet_name='ScenarioInfoSecondHalf')
     scenario_info = pd.read_excel(specs_path, sheet_name='ScenarioInfo')
     scenarios = scenario_info['Scenario']
 
@@ -137,11 +136,11 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     specs_data = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(specs_data.loc[0, SPE_COUNTRY], time.ctime())
 
-    grid_emission_factors = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emission_factors.xlsx', sheet_name='Sheet1', index_col='Country')
-    grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')
+    grid_emission_factors = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emission_factors.xlsx', sheet_name='Sheet1', index_col='Country')  # ToDo this should be moved to specs file
+    grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')  # ToDo this should be moved to specs file
 
     for scenario in scenarios:
-        #print('Scenario: ' + str(scenario + 1),  time.ctime())
+        print('Scenario: ' + str(scenario + 1),  time.ctime())
         country_id = specs_data.iloc[0]['CountryCode']
 
         # Productive uses lever
@@ -171,7 +170,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
         auto_intensification = scenario_parameters.iloc[rollout_index]['AutoIntensificationKM']
 
-        if int(grid_generation_index) == 0:
+        if int(grid_generation_index) == 0:  # ToDo the grid generation costs and grid emission factors should be read from the specs file
             if int(tier_index) == 0:
                 grid_price = grid_generation_costs.loc[country_id]['BU']
                 grid_emission_factor = grid_emission_factors.loc[country_id]['BU']
@@ -192,9 +191,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
                 grid_price = grid_generation_costs.loc[country_id]['High_CT']
                 grid_emission_factor = grid_emission_factors.loc[country_id]['High_CT']
 
-        ## RUN_PARAM: Make sure the path to the resource data is set up properly here
-        #wind_path = os.path.join(r'..\test_data', '{}-2-wind.csv'.format(country_id))
-        #pv_path = os.path.join(r'..\test_data', '{}-2-pv.csv'.format(country_id))
 
         settlements_in_csv = calibrated_csv_path
 
@@ -215,6 +211,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         num_people_per_hh_rural = float(specs_data.iloc[0][SPE_NUM_PEOPLE_PER_HH_RURAL])
         num_people_per_hh_urban = float(specs_data.iloc[0][SPE_NUM_PEOPLE_PER_HH_URBAN])
         max_grid_extension_dist = float(specs_data.iloc[0][SPE_MAX_GRID_EXTENSION_DIST])
+
+        # The carbon tax (currently set to 51 USD/tonCO2eq) is added to the diesel fuel price if grid_generation_index = 1 (representing the "Carbon tax included" scenarios). Should be moved to specs
         diesel_price = float(scenario_parameters.iloc[0]['DieselPrice']) + (grid_generation_index * (51 / 1000000) * 256.9131097 * 9.9445485)
 
         # RUN_PARAM: Fill in general and technology specific parameters (e.g. discount rate, losses etc.)
@@ -397,7 +395,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
             onsseter.calc_summaries(df_summary, sumtechs, year)
 
-
+        # Remove some colummns to reduce size of result files
         del onsseter.df['Conflict']
         del onsseter.df['ElecPop']
         del onsseter.df['ElectrificationOrder']
@@ -421,30 +419,9 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         except KeyError:
             pass
 
-        # onsseter.df['PVHybridEmissionFactor2025'] = onsseter.df['PVHybridDieselConsumption2025'] * 256.9131097 * 9.9445485 / onsseter.df['EnergyPerSettlement2025']
-        # onsseter.df['PVHybridEmissionFactor2030'] = onsseter.df['PVHybridDieselConsumption2030'] * 256.9131097 * 9.9445485 / onsseter.df['EnergyPerSettlement2030']
-        #
-        # onsseter.df['WindHybridEmissionFactor2025'] = onsseter.df['WindHybridDieselConsumption2025'] * 256.9131097 * 9.9445485 / onsseter.df['EnergyPerSettlement2025']
-        # onsseter.df['WindHybridEmissionFactor2030'] = onsseter.df['WindHybridDieselConsumption2030'] * 256.9131097 * 9.9445485 / onsseter.df['EnergyPerSettlement2030']
-        #
-        # for year in [2025, 2030]:
-        #     onsseter.df.loc[onsseter.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 5, 'AnnualEmissions' + "{}".format(year)] = onsseter.df[
-        #                                                                                                           SET_ENERGY_PER_CELL + "{}".format(year)] * \
-        #                                                                                                       onsseter.df[
-        #                                                                                                           'PVHybridEmissionFactor' + "{}".format(
-        #                                                                                                               year)] / 1000
-        #     onsseter.df.loc[onsseter.df[SET_ELEC_FINAL_CODE + "{}".format(year)] == 6, 'AnnualEmissions' + "{}".format(year)] = onsseter.df[
-        #                                                                                                           SET_ENERGY_PER_CELL + "{}".format(year)] * \
-        #                                                                                                       onsseter.df[
-        #                                                                                                           'WindHybridEmissionFactor' + "{}".format(
-        #                                                                                                               year)] / 1000
-        #
-        # onsseter.df['AnnualEmissionsTotal'] = onsseter.df['AnnualEmissions' + "{}".format(2030)] + onsseter.df['AnnualEmissions' + "{}".format(2025)]
-
         for year in yearsofanalysis:
             onsseter.tech_code_update(year)
-            #del onsseter.df['PVHybridGenCost' + "{}".format(year)]
-            #del onsseter.df['PVHybridGenCap' + "{}".format(year)]
+            # Remove some colummns of techs not included to reduce size of result files
             del onsseter.df['MG_PV' + "{}".format(year)]
             del onsseter.df['MG_Wind' + "{}".format(year)]
             del onsseter.df['MG_Diesel' + "{}".format(year)]
@@ -452,9 +429,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             del onsseter.df['Minimum_LCOE_Off_grid' + "{}".format(year)]
             del onsseter.df['Minimum_Tech_Off_grid' + "{}".format(year)]
             del onsseter.df['Off_Grid_Code' + "{}".format(year)]
-            #del onsseter.df['RenewableShare' + "{}".format(year)]
-            #del onsseter.df['SADieselFuelCost' + "{}".format(year)]
-            #del onsseter.df['MGDieselFuelCost' + "{}".format(year)]
 
         for i in range(len(onsseter.df.columns)):
             if onsseter.df.iloc[:, i].dtype == 'float64':
@@ -466,57 +440,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         onsseter.df.to_csv(settlements_out_csv, index=False)
 
         logging.info('Finished')
-
-    # scenario_info = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emissions-2-specs.xlsx',
-    #                               sheet_name='ScenarioInfoAll')
-    # scenarios = scenario_info['Scenario']
-    #
-    # for scenario in scenarios:
-    #     productive_index = scenario_info.iloc[scenario]['Productive_uses_demand']
-    #     tier_index = scenario_info.iloc[scenario]['Target_electricity_consumption_level']
-    #     grid_connection_index = scenario_info.iloc[scenario]['Grid_connection_cap']
-    #     grid_generation_index = scenario_info.iloc[scenario]['Grid_electricity_generation_cost']
-    #     pv_index = scenario_info.iloc[scenario]['PV_cost_adjust']
-    #     rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
-    #
-    #     settlements_out_csv = os.path.join(results_folder,
-    #                                        '{}-2-{}_{}_{}_{}_{}_{}.csv'.format(country_id, tier_index, productive_index,
-    #                                                                            grid_generation_index, pv_index,
-    #                                                                            grid_connection_index, rollout_index))
-    #     summary_csv = os.path.join(summary_folder,
-    #                                '{}-2-{}_{}_{}_{}_{}_{}_summary.csv'.format(country_id, tier_index, productive_index,
-    #                                                                            grid_generation_index, pv_index,
-    #                                                                            grid_connection_index, rollout_index))
-    #
-    #     df = pd.read_csv(settlements_out_csv)
-    #
-    #
-    #
-    #
-    #     yearsofanalysis = [2025, 2030]
-    #     elements = ["1.Population", "2.New_Connections", "3.Capacity", "4.Investment", "5.Emissions"]
-    #     techs = ["Grid", "SA_Diesel", "SA_PV", "MG_Diesel", "MG_PV", "MG_Wind", "MG_Hydro", "MG_PV_Hybrid",
-    #              "MG_Wind_Hybrid"]
-    #     sumtechs = []
-    #     for element in elements:
-    #         for tech in techs:
-    #             sumtechs.append(element + "_" + tech)
-    #     total_rows = len(sumtechs)
-    #     df_summary = pd.DataFrame(columns=yearsofanalysis)
-    #     for row in range(0, total_rows):
-    #         df_summary.loc[sumtechs[row]] = "Nan"
-    #
-    #     for i in range(len(df.columns)):
-    #         if df.iloc[:, i].dtype == 'float64':
-    #             df.iloc[:, i] = pd.to_numeric(df.iloc[:, i], downcast='float')
-    #         elif df.iloc[:, i].dtype == 'int64':
-    #             df.iloc[:, i] = pd.to_numeric(df.iloc[:, i], downcast='signed')
-    #
-    #     for year in yearsofanalysis:
-    #         calc_summaries(df, df_summary, sumtechs, year)
-    #
-    #     df_summary.to_csv(summary_csv, index=sumtechs)
-    #     df.to_csv(settlements_out_csv, index=False)
 
     shutil.make_archive(results_folder, 'zip', results_folder)
     shutil.make_archive(summary_folder, 'zip', summary_folder)
