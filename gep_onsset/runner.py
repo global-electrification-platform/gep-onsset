@@ -136,9 +136,6 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     specs_data = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(specs_data.loc[0, SPE_COUNTRY], time.ctime())
 
-    grid_emission_factors = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\emission_factors.xlsx', sheet_name='Sheet1', index_col='Country')  # ToDo this should be moved to specs file
-    grid_generation_costs = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\grid_gen_costs.xlsx', sheet_name='Sheet1', index_col='Country')  # ToDo this should be moved to specs file
-
     for scenario in scenarios:
         print('Scenario: ' + str(scenario + 1),  time.ctime())
         country_id = specs_data.iloc[0]['CountryCode']
@@ -158,9 +155,9 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         annual_new_grid_connections_limit = float(scenario_parameters.iloc[grid_connection_index]['GridConnectionsLimitThousands'] * 1000)
         annual_grid_cap_gen_limit = float(specs_data.loc[0, 'NewGridGenerationCapacityAnnualLimitMW'] * 1000)
 
-        # Grid generation cost lever
-        grid_generation_index = scenario_info.iloc[scenario]['Grid_electricity_generation_cost']
-        grid_price = float(scenario_parameters.iloc[grid_generation_index]['GridGenerationCost'])
+        # Carbon cost lever
+        carbon_cost_index = scenario_info.iloc[scenario]['Carbon_cost']
+        carbon_cost = float(scenario_parameters.iloc[carbon_cost_index]['CarbonCost'])
 
         # PV system cost
         pv_index = scenario_info.iloc[scenario]['PV_cost_adjust']
@@ -170,37 +167,26 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
         auto_intensification = scenario_parameters.iloc[rollout_index]['AutoIntensificationKM']
 
-        if int(grid_generation_index) == 0:  # ToDo the grid generation costs and grid emission factors should be read from the specs file
-            if int(tier_index) == 0:
-                grid_price = grid_generation_costs.loc[country_id]['BU']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['BU']
-            if int(tier_index) == 1:
-                grid_price = grid_generation_costs.loc[country_id]['Low']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['Low']
-            if int(tier_index) == 2:
-                grid_price = grid_generation_costs.loc[country_id]['High']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['High']
-        elif int(grid_generation_index) == 1:
-            if int(tier_index) == 0:
-                grid_price = grid_generation_costs.loc[country_id]['BU_CT']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['BU_CT']
-            if int(tier_index) == 1:
-                grid_price = grid_generation_costs.loc[country_id]['Low_CT']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['Low_CT']
-            if int(tier_index) == 2:
-                grid_price = grid_generation_costs.loc[country_id]['High_CT']
-                grid_emission_factor = grid_emission_factors.loc[country_id]['High_CT']
+        # 'CT' in the specs file represents the costs if a carbon tax is included
+        if int(carbon_cost_index) == 1:
+            grid_price = float(scenario_parameters.iloc[tier_index]['GridGenerationCost_CT'])
+            grid_emission_factor = scenario_parameters.loc[tier_index]['GridEmissionFactor_CT']
+            grid_capacity_investment = scenario_parameters.loc[tier_index]['GridCapacityInvestment_CT']
+        else:
+            grid_price = float(scenario_parameters.iloc[tier_index]['GridGenerationCost'])
+            grid_emission_factor = scenario_parameters.loc[tier_index]['GridEmissionFactor']
+            grid_capacity_investment = scenario_parameters.loc[tier_index]['GridCapacityInvestment']
 
 
         settlements_in_csv = calibrated_csv_path
 
         settlements_out_csv = os.path.join(results_folder,
                                            '{}-3-{}_{}_{}_{}_{}_{}.csv'.format(country_id, tier_index, productive_index,
-                                                                            grid_generation_index, pv_index,
+                                                                            carbon_cost_index, pv_index,
                                                                             grid_connection_index, rollout_index))
         summary_csv = os.path.join(summary_folder,
                                    '{}-3-{}_{}_{}_{}_{}_{}_summary.csv'.format(country_id, tier_index, productive_index,
-                                                                            grid_generation_index, pv_index,
+                                                                            carbon_cost_index, pv_index,
                                                                             grid_connection_index, rollout_index))
 
         onsseter = SettlementProcessor(settlements_in_csv)
@@ -212,8 +198,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         num_people_per_hh_urban = float(specs_data.iloc[0][SPE_NUM_PEOPLE_PER_HH_URBAN])
         max_grid_extension_dist = float(specs_data.iloc[0][SPE_MAX_GRID_EXTENSION_DIST])
 
-        # The carbon tax (currently set to 51 USD/tonCO2eq) is added to the diesel fuel price if grid_generation_index = 1 (representing the "Carbon tax included" scenarios). Should be moved to specs
-        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice']) + (grid_generation_index * (51 / 1000000) * 256.9131097 * 9.9445485)
+        # Carbon cost represents the cost in USD/tonCO2eq, which is converted and added to the diesel price
+        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'] + (carbon_cost / 1000000) * 256.9131097 * 9.9445485)
 
         # RUN_PARAM: Fill in general and technology specific parameters (e.g. discount rate, losses etc.)
         Technology.set_default_values(base_year=start_year,
@@ -227,7 +213,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
                                connection_cost_per_hh=125,
                                capacity_factor=1,
                                tech_life=30,
-                               grid_capacity_investment=float(specs_data.iloc[0][SPE_GRID_CAPACITY_INVESTMENT]),
+                               grid_capacity_investment=grid_capacity_investment,
                                grid_penalty_ratio=1,
                                grid_price=grid_price)
 
