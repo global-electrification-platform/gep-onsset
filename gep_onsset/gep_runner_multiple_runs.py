@@ -5,7 +5,7 @@
 # Python version: 3.5
 
 import os
-from gep_onsset import *
+from onsset import *
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -15,7 +15,7 @@ import os
 
 
 # RUN_PARAM: Insert the name of the country you are working on. More countries should be separated using comma e.g. ["Malawi", "Ghana"]
-countries = ['ni', 'ao', 'bj']
+countries = ['dj']
 print(countries)
 # countries = str(input('countries: ')).split()
 # countries = specs.index.tolist() if 'all' in countries else countries

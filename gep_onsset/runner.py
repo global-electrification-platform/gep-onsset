@@ -83,18 +83,36 @@ def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
     start_year = int(specs_data.loc[0, SPE_START_YEAR])
     end_year = int(specs_data.loc[0, SPE_END_YEAR])
 
+    elec_info = pd.read_excel(r'C:\Users\adm.esa\Desktop\GEP_2021\2020_elec_rates.xlsx', sheet_name='Sheet1')
+    country = specs_data.loc[0, 'CountryCode']
+    country_info = elec_info.loc[elec_info['Country'] == country]
+    elec_actual = country_info['National'].iloc[0] / 100
+    elec_actual_urban = country_info['Urban'].iloc[0] / 100
+    elec_actual_rural = country_info['Rural'].iloc[0] / 100
+
+    if elec_actual_rural == 0:
+        elec_actual_rural = 0.01
+
+    #elec_actual = elec_info.loc[]
+
     intermediate_year = 2025
-    elec_actual = specs_data.loc[0, SPE_ELEC]
-    elec_actual_urban = specs_data.loc[0, SPE_ELEC_URBAN]
-    elec_actual_rural = specs_data.loc[0, SPE_ELEC_RURAL]
+    elec_actual_prev = specs_data.loc[0, SPE_ELEC]
+    elec_actual_urban_prev = specs_data.loc[0, SPE_ELEC_URBAN]
+    elec_actual_rural_prev = specs_data.loc[0, SPE_ELEC_RURAL]
 
     pop_modelled, urban_modelled = onsseter.calibrate_current_pop_and_urban(pop_actual, urban_current)
 
     onsseter.project_pop_and_urban(pop_modelled, pop_future, urban_modelled,
                                    urban_future, start_year, end_year, intermediate_year)
 
-    elec_modelled, rural_elec_ratio, urban_elec_ratio = \
-        onsseter.elec_current_and_future(elec_actual, elec_actual_urban, elec_actual_rural, start_year)
+    # elec_modelled, rural_elec_ratio, urban_elec_ratio = \
+    #     onsseter.elec_current_and_future(elec_actual, elec_actual_urban, elec_actual_rural, start_year)
+
+    elec_modelled, rural_elec_ratio, urban_elec_ratio, grid_data, dist_limit, \
+    min_night_lights, min_pop, buffer_used, td_dist_2 = onsseter.calibrate_elec_current(elec_actual, elec_actual_urban, elec_actual_rural, start_year, min_night_lights=0,
+                               min_pop=50, max_transformer_dist=2, max_mv_dist=5, max_hv_dist=5, buffer=True)
+
+    print(country, elec_actual, elec_actual_prev, round(elec_modelled - elec_actual, 3), buffer_used, round(td_dist_2, 2))
 
     onsseter.commercial_demand()
 
@@ -103,8 +121,10 @@ def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
     specs_data.loc[0, 'rural_elec_ratio_modelled'] = rural_elec_ratio
     specs_data.loc[0, 'urban_elec_ratio_modelled'] = urban_elec_ratio
 
-    # del onsseter.df['Unnamed: 0']
-
+    try:
+        del onsseter.df['Unnamed: 0']
+    except KeyError:
+        pass
     book = load_workbook(specs_path)
     writer = pd.ExcelWriter(specs_path_calib, engine='openpyxl')
     writer.book = book
@@ -128,16 +148,22 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     summary_folder : str
 
     """
+    all_scenarios = r'C:\Users\adm.esa\Desktop\GEP_2021\bj-2\climate\bj-2-specs-2023.xlsx'
 
-    scenario_info = pd.read_excel(specs_path, sheet_name='ScenarioInfo')
+    scenario_info = pd.read_excel(all_scenarios, sheet_name='ScenarioInfo')
     scenarios = scenario_info['Scenario']
 
     scenario_parameters = pd.read_excel(specs_path, sheet_name='ScenarioParameters')
     specs_data = pd.read_excel(specs_path, sheet_name='SpecsDataCalib')
     print(specs_data.loc[0, SPE_COUNTRY], time.ctime())
 
+    grid_emission_factors = pd.read_csv(r'C:\Users\adm.esa\Desktop\GEP_2021\gep-climate-osemosys-data\emission_factors.csv', index_col='Country')
+    grid_generation_costs = pd.read_csv(r'C:\Users\adm.esa\Desktop\GEP_2021\gep-climate-osemosys-data\LCOEs.csv', index_col='Country')
+    grid_capacity_investment_factors = pd.read_csv(r'C:\Users\adm.esa\Desktop\GEP_2021\gep-climate-osemosys-data\capacity_costs.csv', index_col='Country')
+    grid_re_capacity = pd.read_csv(r'C:\Users\adm.esa\Desktop\GEP_2021\gep-climate-osemosys-data\ren_cap_share.csv', index_col='Country')
+
     for scenario in scenarios:
-        print('Scenario: ' + str(scenario + 1),  time.ctime())
+        #print('Scenario: ' + str(scenario + 1),  time.ctime())
         country_id = specs_data.iloc[0]['CountryCode']
 
         # Productive uses lever
@@ -155,9 +181,9 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         annual_new_grid_connections_limit = float(scenario_parameters.iloc[grid_connection_index]['GridConnectionsLimitThousands'] * 1000)
         annual_grid_cap_gen_limit = float(specs_data.loc[0, 'NewGridGenerationCapacityAnnualLimitMW'] * 1000)
 
-        # Carbon cost lever
-        carbon_cost_index = scenario_info.iloc[scenario]['Carbon_cost']
-        carbon_cost = float(scenario_parameters.iloc[carbon_cost_index]['CarbonCost'])
+        # Grid generation cost lever
+        grid_generation_index = scenario_info.iloc[scenario]['Grid_electricity_generation_cost']
+        grid_price = float(scenario_parameters.iloc[grid_generation_index]['GridGenerationCost'])
 
         # PV system cost
         pv_index = scenario_info.iloc[scenario]['PV_cost_adjust']
@@ -167,29 +193,67 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
         auto_intensification = scenario_parameters.iloc[rollout_index]['AutoIntensificationKM']
 
-        # 'CT' in the specs file represents the costs if a carbon tax is included
-        if int(carbon_cost_index) == 1:
-            grid_price = float(scenario_parameters.iloc[tier_index]['GridGenerationCost_CT'])
-            grid_emission_factor = scenario_parameters.loc[tier_index]['GridEmissionFactor_CT']
-            grid_capacity_investment = scenario_parameters.loc[tier_index]['GridCapacityInvestment_CT']
-        else:
-            grid_price = float(scenario_parameters.iloc[tier_index]['GridGenerationCost'])
-            grid_emission_factor = scenario_parameters.loc[tier_index]['GridEmissionFactor']
-            grid_capacity_investment = scenario_parameters.loc[tier_index]['GridCapacityInvestment']
+        if int(grid_generation_index) == 0:
+            if int(tier_index) == 0:
+                grid_price = grid_generation_costs.loc[country_id]['BU']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['BU']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['BU']
+                grid_re_share = grid_re_capacity.loc[country_id]['BU']
+            if int(tier_index) == 1:
+                grid_price = grid_generation_costs.loc[country_id]['Low']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['Low']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['Low']
+                grid_re_share = grid_re_capacity.loc[country_id]['Low']
+            if int(tier_index) == 2:
+                grid_price = grid_generation_costs.loc[country_id]['High']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['High']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['High']
+            grid_re_share = grid_re_capacity.loc[country_id]['High']
+        # elif int(grid_generation_index) == 1:
+        #     if int(tier_index) == 0:
+        #         grid_price = grid_generation_costs.loc[country_id]['BU_CT_low']
+        #         grid_emission_factor = grid_emission_factors.loc[country_id]['BU_CT_low']
+        #         grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['BU_CT_low']
+        #     if int(tier_index) == 1:
+        #         grid_price = grid_generation_costs.loc[country_id]['Low_CT_low']
+        #         grid_emission_factor = grid_emission_factors.loc[country_id]['Low_CT_low']
+        #         grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['Low_CT_low']
+        #     if int(tier_index) == 2:
+        #         grid_price = grid_generation_costs.loc[country_id]['High_CT_low']
+        #         grid_emission_factor = grid_emission_factors.loc[country_id]['High_CT_low']
+        #         grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['High_CT_low']
+        elif int(grid_generation_index) == 1:
+            if int(tier_index) == 0:
+                grid_price = grid_generation_costs.loc[country_id]['BU_CT_high']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['BU_CT_high']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['BU_CT_high']
+                grid_re_share = grid_re_capacity.loc[country_id]['BU_CT_high']
+            if int(tier_index) == 1:
+                grid_price = grid_generation_costs.loc[country_id]['Low_CT_high']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['Low_CT_high']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['Low_CT_high']
+                grid_re_share = grid_re_capacity.loc[country_id]['Low_CT_high']
+            if int(tier_index) == 2:
+                grid_price = grid_generation_costs.loc[country_id]['High_CT_high']
+                grid_emission_factor = grid_emission_factors.loc[country_id]['High_CT_high']
+                grid_capacity_investment = grid_capacity_investment_factors.loc[country_id]['High_CT_high']
+                grid_re_share = grid_re_capacity.loc[country_id]['High_CT_high']
 
 
         settlements_in_csv = calibrated_csv_path
 
         settlements_out_csv = os.path.join(results_folder,
                                            '{}-3-{}_{}_{}_{}_{}_{}.csv'.format(country_id, tier_index, productive_index,
-                                                                            carbon_cost_index, pv_index,
-                                                                            grid_connection_index, rollout_index))
+                                                                               grid_generation_index, pv_index,
+                                                                                grid_connection_index, rollout_index))
         summary_csv = os.path.join(summary_folder,
                                    '{}-3-{}_{}_{}_{}_{}_{}_summary.csv'.format(country_id, tier_index, productive_index,
-                                                                            carbon_cost_index, pv_index,
-                                                                            grid_connection_index, rollout_index))
+                                                                               grid_generation_index, pv_index,
+                                                                                grid_connection_index, rollout_index))
 
         onsseter = SettlementProcessor(settlements_in_csv)
+
+        onsseter.df['GridPenalty'].fillna(1, inplace=True)
 
         start_year = specs_data.iloc[0][SPE_START_YEAR]
         end_year = specs_data.iloc[0][SPE_END_YEAR]
@@ -199,7 +263,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         max_grid_extension_dist = float(specs_data.iloc[0][SPE_MAX_GRID_EXTENSION_DIST])
 
         # Carbon cost represents the cost in USD/tonCO2eq, which is converted and added to the diesel price
-        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'] + (carbon_cost / 1000000) * 256.9131097 * 9.9445485)
+        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'] + (grid_generation_index * 53  / 1000000) * 256.9131097 * 9.9445485)
 
         # RUN_PARAM: Fill in general and technology specific parameters (e.g. discount rate, losses etc.)
         Technology.set_default_values(base_year=start_year,
@@ -381,6 +445,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
             onsseter.calc_summaries(df_summary, sumtechs, year)
 
+
+
         # Remove some colummns to reduce size of result files
         del onsseter.df['Conflict']
         del onsseter.df['ElecPop']
@@ -416,11 +482,30 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
             del onsseter.df['Minimum_Tech_Off_grid' + "{}".format(year)]
             del onsseter.df['Off_Grid_Code' + "{}".format(year)]
 
+        onsseter.df['RE_Share2025'] = 0
+        onsseter.df['RE_Share2030'] = 0
+
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 1, 'RE_Share2025'] = grid_re_share  # Grid
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 2, 'RE_Share2025'] = grid_re_share  # New grid
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 3, 'RE_Share2025'] = 1  # SA PV
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 5, 'RE_Share2025'] = onsseter.df['PVHybridPVCapacity2025'] / onsseter.df['PVHybridCapacity2025']  # PV Hybrid
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 6, 'RE_Share2025'] = onsseter.df['WindHybridWindCapacity2025'] / onsseter.df['WindHybridCapacity2025']  # Wind hybrid
+        onsseter.df.loc[onsseter.df['FinalElecCode2025'] == 7, 'RE_Share2025'] = 1  # Hydro
+
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 1, 'RE_Share2030'] = grid_re_share  # Grid
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 2, 'RE_Share2030'] = grid_re_share  # New grid
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 3, 'RE_Share2030'] = 1  # SA PV
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 5, 'RE_Share2030'] = onsseter.df['PVHybridPVCapacity2030'] / onsseter.df['PVHybridCapacity2030']  # PV Hybrid
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 6, 'RE_Share2030'] = onsseter.df['WindHybridWindCapacity2030'] / onsseter.df['WindHybridCapacity2030']  # Wind hybrid
+        onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 7, 'RE_Share2030'] = 1  # Hydro
+
         for i in range(len(onsseter.df.columns)):
             if onsseter.df.iloc[:, i].dtype == 'float64':
                 onsseter.df.iloc[:, i] = pd.to_numeric(onsseter.df.iloc[:, i], downcast='float')
             elif onsseter.df.iloc[:, i].dtype == 'int64':
                 onsseter.df.iloc[:, i] = pd.to_numeric(onsseter.df.iloc[:, i], downcast='signed')
+
+
 
         df_summary.to_csv(summary_csv, index=sumtechs)
         onsseter.df.to_csv(settlements_out_csv, index=False)
