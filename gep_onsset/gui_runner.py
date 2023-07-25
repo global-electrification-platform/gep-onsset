@@ -16,15 +16,11 @@ root = tk.Tk()
 root.withdraw()
 root.attributes("-topmost", True)
 
-choice = 2 #int(input('Enter 1 to prepare/calibrate the GIS input file, 2 to run scenario(s): '))
+choice = int(input('Enter 1 to prepare/calibrate the GIS input file, 2 to run scenario(s): '))
 
-countries = ['ao', 'bd', 'bf', 'bi', 'bj', 'bw', 'cd', 'cf', 'cg', 'ci', 'cm', 'dj', 'er', 'et', 'fm', 'ga', 'gh', 'gm',
-             'gn', 'gq', 'gw', 'hn', 'ht', 'ke', 'kh', 'km', 'lr', 'ls', 'mg', 'ml', 'mm', 'mr', 'mw', 'mz', 'na', 'ne',
-             'ng', 'ni', 'pg', 'pk', 'rw', 'sb', 'sd', 'sl', 'sn', 'so', 'ss', 'st', 'sz', 'td', 'tg', 'tl', 'tz', 'ug',
-             'vu', 'za', 'zm', 'zw']
-
-countries = ['sd']
-
+countries = ['ao', 'bf', 'bi',  'bj', 'bw', 'cd', 'cf', 'cg', 'ci', 'cm', 'dj', 'er', 'et', 'ga', 'gh', 'gm',
+            'gn', 'gq', 'gw', 'ke',  'lr', 'ls', 'ml', 'mr', 'mw', 'mz', 'na', 'ne', 'ng', 'rw', 'sd',
+            'sl', 'sn', 'ss', 'sz', 'td', 'tg', 'tz', 'ug', 'za', 'zm', 'zw']
 
 print(countries)
 
@@ -79,17 +75,20 @@ for country in countries:
         # messagebox.showinfo('OnSSET', 'Browse to SUMMARIES folder and name the scenario to save outputs')
         # summary_folder = filedialog.askdirectory()
 
-        try:
-            os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country))
-        except FileExistsError:
-            pass
-        results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country)
+        # try:
+        #     os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country))
+        # except FileExistsError:
+        #     pass
+        # results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country)
+        #
+        # try:
+        #     os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country))
+        # except FileExistsError:
+        #     pass
+        # summary_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country)
 
-        try:
-            os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country))
-        except FileExistsError:
-            pass
-        summary_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country)
+        results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\00_Climate_3_scenarios'
+        summary_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\00_Climate_3_scenarios\summaries'
 
         pv_path = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\inputs\{}-2-pv.csv'.format(country, country)
         wind_path = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\inputs\{}-2-wind.csv'.format(country, country)

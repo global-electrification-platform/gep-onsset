@@ -110,7 +110,7 @@ def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
 
     elec_modelled, rural_elec_ratio, urban_elec_ratio, grid_data, dist_limit, \
     min_night_lights, min_pop, buffer_used, td_dist_2 = onsseter.calibrate_elec_current(elec_actual, elec_actual_urban, elec_actual_rural, start_year, min_night_lights=0,
-                               min_pop=50, max_transformer_dist=2, max_mv_dist=5, max_hv_dist=5, buffer=True)
+                               min_pop=50, max_transformer_dist=2, max_mv_dist=5, max_hv_dist=5, buffer=False)
 
     print(country, elec_actual, elec_actual_prev, round(elec_modelled - elec_actual, 3), buffer_used, round(td_dist_2, 2))
 
@@ -121,20 +121,20 @@ def calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path):
     specs_data.loc[0, 'rural_elec_ratio_modelled'] = rural_elec_ratio
     specs_data.loc[0, 'urban_elec_ratio_modelled'] = urban_elec_ratio
 
-    try:
-        del onsseter.df['Unnamed: 0']
-    except KeyError:
-        pass
-    book = load_workbook(specs_path)
-    writer = pd.ExcelWriter(specs_path_calib, engine='openpyxl')
-    writer.book = book
-    # RUN_PARAM: Here the calibrated "specs" data are copied to a new tab called "SpecsDataCalib".
-    specs_data.to_excel(writer, sheet_name='SpecsDataCalib', index=False)
-    writer.save()
-    writer.close()
-
-    #logging.info('Calibration finished. Results are transferred to the csv file')
-    onsseter.df.to_csv(settlements_out_csv, index=False)
+    # try:
+    #     del onsseter.df['Unnamed: 0']
+    # except KeyError:
+    #     pass
+    # book = load_workbook(specs_path)
+    # writer = pd.ExcelWriter(specs_path_calib, engine='openpyxl')
+    # writer.book = book
+    # # RUN_PARAM: Here the calibrated "specs" data are copied to a new tab called "SpecsDataCalib".
+    # specs_data.to_excel(writer, sheet_name='SpecsDataCalib', index=False)
+    # writer.save()
+    # writer.close()
+    #
+    # #logging.info('Calibration finished. Results are transferred to the csv file')
+    # onsseter.df.to_csv(settlements_out_csv, index=False)
 
 
 def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv_path, wind_path):
@@ -148,7 +148,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
     summary_folder : str
 
     """
-    all_scenarios = r'C:\Users\adm.esa\Desktop\GEP_2021\bj-2\climate\bj-2-specs-2023.xlsx'
+    all_scenarios = r'C:\Users\adm.esa\Desktop\GEP_2021\bj-2\climate\bj-2-specs-2023-short.xlsx'
 
     scenario_info = pd.read_excel(all_scenarios, sheet_name='ScenarioInfo')
     scenarios = scenario_info['Scenario']
@@ -263,7 +263,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         max_grid_extension_dist = float(specs_data.iloc[0][SPE_MAX_GRID_EXTENSION_DIST])
 
         # Carbon cost represents the cost in USD/tonCO2eq, which is converted and added to the diesel price
-        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'] + (grid_generation_index * 53  / 1000000) * 256.9131097 * 9.9445485)
+        diesel_price = float(scenario_parameters.iloc[0]['DieselPrice'] + (grid_generation_index * 106  / 1000000) * 256.9131097 * 9.9445485)
 
         # RUN_PARAM: Fill in general and technology specific parameters (e.g. discount rate, losses etc.)
         Technology.set_default_values(base_year=start_year,
@@ -512,7 +512,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
 
         logging.info('Finished')
 
-    shutil.make_archive(results_folder, 'zip', results_folder)
-    shutil.make_archive(summary_folder, 'zip', summary_folder)
+    #shutil.make_archive(results_folder, 'zip', results_folder)
+    #shutil.make_archive(summary_folder, 'zip', summary_folder)
 
-    shutil.rmtree(results_folder)
+    #shutil.rmtree(results_folder)
