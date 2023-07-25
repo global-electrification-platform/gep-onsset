@@ -154,6 +154,7 @@ def calculate_hybrid_lcoe(diesel_price, end_year, start_year, energy_per_hh,
     sum_el_gen = 0
     investment = 0
     sum_costs = 0
+    npc = 0
     total_battery_investment = 0
     total_fuel_cost = 0
     total_om_cost = 0
@@ -197,6 +198,9 @@ def calculate_hybrid_lcoe(diesel_price, end_year, start_year, energy_per_hh,
         sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment - salvage) / (
                 (1 + discount_rate) ** year)
 
+        npc += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment) / (
+                (1 + discount_rate) ** year)
+
         if year > 0:
             sum_el_gen += energy_per_hh / ((1 + discount_rate) ** year)
 
@@ -204,7 +208,7 @@ def calculate_hybrid_lcoe(diesel_price, end_year, start_year, energy_per_hh,
 
     opex = fuel_costs + om_costs
 
-    return sum_costs / sum_el_gen, initial_investment, emission_factor, opex, sum_costs
+    return sum_costs / sum_el_gen, initial_investment, emission_factor, opex, npc
 
 #@jit(nopython=True)
 def pv_diesel_hybrid(

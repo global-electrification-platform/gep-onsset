@@ -355,6 +355,7 @@ class Technology:
         dicounted_grid_capacity_investments = grid_capacity_investments / discount_factor
         investment_cost = np.sum(discounted_investments, axis=1) + np.sum(dicounted_grid_capacity_investments, axis=1)
         discounted_costs = (investments + operation_and_maintenance + fuel - salvage) / discount_factor
+        npc = (investments + operation_and_maintenance + fuel - salvage) / discount_factor
         discounted_generation = el_gen / discount_factor
         lcoe = np.sum(discounted_costs, axis=1) / np.sum(discounted_generation, axis=1)
         lcoe = pd.DataFrame(lcoe[:, np.newaxis])
@@ -373,9 +374,9 @@ class Technology:
         if get_investment_cost:
             return investment_cost
         elif self.hybrid:
-            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, hybrid_opex, pd.Series(np.sum(discounted_costs, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, hybrid_opex, pd.Series(np.sum(npc, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
         else:
-            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om, pd.Series(np.sum(discounted_costs, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om, pd.Series(np.sum(npc, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
 
     def transmission_network(self, peak_load, additional_mv_line_length=0, additional_transformer=0,
                              mv_distribution=False):
