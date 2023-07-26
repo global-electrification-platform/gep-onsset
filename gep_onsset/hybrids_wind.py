@@ -403,6 +403,7 @@ def wind_diesel_hybrid(
         sum_el_gen = np.zeros((len(battery_sizes), wind_no, diesel_no))
         investment = np.zeros((len(battery_sizes), wind_no, diesel_no))
         npc = np.zeros((len(battery_sizes), wind_no, diesel_no))
+        initial_investment = np.zeros((len(battery_sizes), wind_no, diesel_no))
 
         for year in np.arange(project_life + 1):
             salvage = np.zeros((len(battery_sizes), wind_no, diesel_no))
@@ -423,12 +424,14 @@ def wind_diesel_hybrid(
 
             investment += diesel_investment + wind_investment + battery_investment + inverter_investment - salvage
 
-            if year == 0:
-                initial_investment = diesel_investment + wind_investment + battery_investment + inverter_investment
+            # if year == 0:
+            #     initial_investment = diesel_investment + wind_investment + battery_investment + inverter_investment
 
-            sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + wind_investment - salvage) / ((1 + discount_rate) ** year)
+            initial_investment += (diesel_investment + wind_investment + battery_investment + inverter_investment) / ((1 + discount_rate) ** year)
 
-            npc += (fuel_costs + om_costs + battery_investment + diesel_investment + wind_investment) / ((1 + discount_rate) ** year)
+            sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + wind_investment + inverter_investment - salvage) / ((1 + discount_rate) ** year)
+
+            npc += (fuel_costs + om_costs + battery_investment + diesel_investment + wind_investment + inverter_investment) / ((1 + discount_rate) ** year)
 
             if year > 0:
                 sum_el_gen += energy_per_hh / ((1 + discount_rate) ** year)

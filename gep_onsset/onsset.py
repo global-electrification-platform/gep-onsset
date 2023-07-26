@@ -355,7 +355,6 @@ class Technology:
         dicounted_grid_capacity_investments = grid_capacity_investments / discount_factor
         investment_cost = np.sum(discounted_investments, axis=1) + np.sum(dicounted_grid_capacity_investments, axis=1)
         discounted_costs = (investments + operation_and_maintenance + fuel - salvage) / discount_factor
-        npc = (investments + operation_and_maintenance + fuel - salvage) / discount_factor
         discounted_generation = el_gen / discount_factor
         lcoe = np.sum(discounted_costs, axis=1) / np.sum(discounted_generation, axis=1)
         lcoe = pd.DataFrame(lcoe[:, np.newaxis])
@@ -366,6 +365,14 @@ class Technology:
             generation_investments += hybrid_investment * generation_per_year
         else:
             generation_investments += peak_load * self.grid_capacity_investment
+
+        if self.hybrid:
+            npc = hybrid_npc + pd.Series(np.sum((investments + operation_and_maintenance) / discount_factor, axis=1))
+        elif self.grid_price > 0:
+            npc = generation_investments + pd.Series(np.sum((investments + operation_and_maintenance) / discount_factor, axis=1))
+        else:
+            npc = pd.Series(np.sum((investments + operation_and_maintenance + fuel) / discount_factor, axis=1))
+
         generation_om = (cap_cost * penalty * self.om_costs * installed_capacity) + generation_per_year * fuel_cost + hybrid_opex
 
         outputs = pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om], axis=1)
@@ -374,9 +381,9 @@ class Technology:
         if get_investment_cost:
             return investment_cost
         elif self.hybrid:
-            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, hybrid_opex, pd.Series(np.sum(npc, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, hybrid_opex, npc, pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
         else:
-            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om, pd.Series(np.sum(npc, axis=1)), pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
+            return lcoe, pd.concat([investment_cost, td_investment_cost, td_om_cost, generation_investments, generation_om, npc, pd.Series(hv_km), pd.Series(mv_km), pd.Series(lv_km), pd.Series(service_transformers)], axis=1)
 
     def transmission_network(self, peak_load, additional_mv_line_length=0, additional_transformer=0,
                              mv_distribution=False):
@@ -2274,7 +2281,8 @@ class SettlementProcessor:
                                        base_to_peak=self.df[SET_BASE_TO_PEAK],
                                        hybrid_lcoe=self.df['PVHybridGenLCOE' + '{}'.format(year)],
                                        hybrid_investment=self.df['PVHybridGenCapex' + '{}'.format(year)],
-                                       hybrid_opex=self.df['PVHybridGenOPEX' + '{}'.format(year)])
+                                       hybrid_opex=self.df['PVHybridGenOPEX' + '{}'.format(year)],
+                                       hybrid_npc=self.df['PVHybridGenNPC' + "{}".format(year)])
 
         self.df['PVHybridGenCapex' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
         return pv_hybrid_investment, self.df['PVHybridCapacity' + '{}'.format(year)]
@@ -2413,7 +2421,8 @@ class SettlementProcessor:
                                          base_to_peak=self.df[SET_BASE_TO_PEAK],
                                          hybrid_lcoe=self.df['WindHybridGenLCOE' + '{}'.format(year)],
                                          hybrid_investment=self.df['WindHybridGenCapex' + '{}'.format(year)],
-                                         hybrid_opex=self.df['WindHybridGenOPEX' + '{}'.format(year)])
+                                         hybrid_opex=self.df['WindHybridGenOPEX' + '{}'.format(year)],
+                                         hybrid_npc=self.df['WindHybridGenNPC' + "{}".format(year)])
 
         self.df['WindHybridGenCapex' + '{}'.format(year)] *= self.df[SET_ENERGY_PER_CELL + "{}".format(year)]
         return wind_hybrid_investment, self.df['WindHybridCapacity' + '{}'.format(year)]

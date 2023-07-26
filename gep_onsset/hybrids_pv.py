@@ -158,6 +158,7 @@ def calculate_hybrid_lcoe(diesel_price, end_year, start_year, energy_per_hh,
     total_battery_investment = 0
     total_fuel_cost = 0
     total_om_cost = 0
+    initial_investment = 0
 
     for year in prange(project_life + 1):
         salvage = 0
@@ -184,21 +185,23 @@ def calculate_hybrid_lcoe(diesel_price, end_year, start_year, energy_per_hh,
         if year == project_life:
             salvage = (1 - (project_life % battery_life) / battery_life) * battery_cost * battery_size / dod_max + \
                       (1 - (project_life % diesel_life) / diesel_life) * diesel_capacity * diesel_cost + \
-                      (1 - (project_life % pv_life) / pv_life) * pv_panel_size * (pv_cost + charge_controller) + \
+                      (1 - (project_life % pv_life) / pv_life) * pv_panel_size * (pv_cost + charge_controller + inverter_cost) + \
                       (1 - (project_life % inverter_life) / inverter_life) * max(load_curve) * inverter_cost
 
             total_battery_investment -= (1 - (project_life % battery_life) / battery_life) * battery_cost * battery_size / dod_max
 
         investment += diesel_investment + pv_investment + battery_investment + inverter_investment - salvage
 
-        if year == 0:
-            initial_investment = diesel_investment + pv_investment + battery_investment + inverter_investment
-
-
-        sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment - salvage) / (
+        # if year == 0:
+        #     initial_investment = diesel_investment + pv_investment + battery_investment + inverter_investment
+        initial_investment += (diesel_investment + pv_investment + battery_investment + inverter_investment) / (
                 (1 + discount_rate) ** year)
 
-        npc += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment) / (
+
+        sum_costs += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment + inverter_investment - salvage) / (
+                (1 + discount_rate) ** year)
+
+        npc += (fuel_costs + om_costs + battery_investment + diesel_investment + pv_investment + inverter_investment) / (
                 (1 + discount_rate) ** year)
 
         if year > 0:

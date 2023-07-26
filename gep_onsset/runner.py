@@ -444,8 +444,8 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv
         onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 6, 'RE_Share2030'] = onsseter.df['WindHybridWindCapacity2030'] / onsseter.df['WindHybridCapacity2030']  # Wind hybrid
         onsseter.df.loc[onsseter.df['FinalElecCode2030'] == 7, 'RE_Share2030'] = 1  # Hydro
 
-        cols = ['TD_Capex2025', 'TD_OPEX2025', 'Generation_Capex2025', 'Generation_OPEX2025', 'NPC2025', 'HV_km2025',
-                'MV_km2025', 'LV_km2025', 'Service_transformers2025', 'InvestmentCapita2025']
+        cols = ['TD_Capex', 'TD_OPEX', 'Generation_Capex', 'Generation_OPEX', 'NPC', 'HV_km',
+                'MV_km', 'LV_km', 'Service_transformers', 'InvestmentCapita']
 
         for c in cols:
             for y in [2025, 2030]:
