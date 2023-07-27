@@ -22,9 +22,9 @@ countries = ['bj']
 
 print(countries)
 
-#messagebox.showinfo('OnSSET', 'Open the specs file')
-#specs_path = filedialog.askopenfilename()
-#specs = pd.read_excel(specs_path, index_col=0)
+messagebox.showinfo('OnSSET', 'Open the specs file')
+specs_path = filedialog.askopenfilename()
+specs = pd.read_excel(specs_path, index_col=0)
 
 for country in countries:
 
@@ -49,43 +49,21 @@ for country in countries:
         calibration(specs_path, csv_path, specs_path_calib, calibrated_csv_path)
 
     elif choice == 2:
-        # messagebox.showinfo('OnSSET', 'Open the csv file with calibrated GIS data')
-        # calibrated_csv_path = filedialog.askopenfilename()
+        messagebox.showinfo('OnSSET', 'Open the csv file with calibrated GIS data')
+        calibrated_csv_path = filedialog.askopenfilename()
 
-        calibrated_csv_path = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-2-country-inputs-2023.csv'.format(country, country)
+        messagebox.showinfo('OnSSET', 'Open the file with hourly PV data')
+        pv_path = filedialog.askopenfilename()
 
-        specs_path = r'C:\Users\adm.esa\Desktop\GEP_2021\00_climate_specs\{}-3-specs.xlsx'.format(country, country)
+        messagebox.showinfo('OnSSET', 'Open the file with hourly Wind data')
+        wind_path = filedialog.askopenfilename()
 
-        # messagebox.showinfo('OnSSET', 'Open the file with hourly PV data')
-        # pv_path = filedialog.askopenfilename()
-        #
-        # messagebox.showinfo('OnSSET', 'Open the file with hourly Wind data')
-        # wind_path = filedialog.askopenfilename()
-        #
-        # print(calibrated_csv_path)
-        # messagebox.showinfo('OnSSET', 'Browse to RESULTS folder to save outputs')
-        # results_folder = filedialog.askdirectory()
-        #
-        # messagebox.showinfo('OnSSET', 'Browse to SUMMARIES folder and name the scenario to save outputs')
-        # summary_folder = filedialog.askdirectory()
+        print(calibrated_csv_path)
+        messagebox.showinfo('OnSSET', 'Browse to RESULTS folder to save outputs')
+        results_folder = filedialog.askdirectory()
 
-        # try:
-        #     os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country))
-        # except FileExistsError:
-        #     pass
-        # results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-results'.format(country, country)
-        #
-        # try:
-        #     os.makedirs(r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country))
-        # except FileExistsError:
-        #     pass
-        # summary_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\climate\{}-3-scenarios-summaries'.format(country, country)
-
-        results_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\00_Climate_Test'
-        summary_folder = r'C:\Users\adm.esa\Desktop\GEP_2021\00_Climate_Test\summaries'
-
-        pv_path = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\inputs\{}-2-pv.csv'.format(country, country)
-        wind_path = r'C:\Users\adm.esa\Desktop\GEP_2021\{}-2\inputs\{}-2-wind.csv'.format(country, country)
+        messagebox.showinfo('OnSSET', 'Browse to SUMMARIES folder and name the scenario to save outputs')
+        summary_folder = filedialog.askdirectory()
 
         scenario(specs_path, calibrated_csv_path, results_folder, summary_folder, pv_path, wind_path)
 
