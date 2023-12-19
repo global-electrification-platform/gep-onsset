@@ -141,7 +141,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
 
         # Grid cap lever
         grid_connection_index = scenario_info.iloc[scenario]['Grid_connection_cap']
-        five_year_target = float(scenario_parameters.iloc[0]['5YearTarget'])
+
         annual_new_grid_connections_limit = float(scenario_parameters.iloc[grid_connection_index]['GridConnectionsLimitThousands'] * 1000)
         annual_grid_cap_gen_limit = float(specs_data.loc[0, 'NewGridGenerationCapacityAnnualLimitMW'] * 1000)
 
@@ -157,20 +157,19 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         rollout_index = scenario_info.iloc[scenario]['Prioritization_algorithm']
         auto_intensification = scenario_parameters.iloc[rollout_index]['AutoIntensificationKM']
 
+        # End year target lever
+        end_year_target_index = scenario_info.iloc[scenario]['10YearTarget']
+        five_year_target = float(scenario_parameters.iloc[end_year_target_index]['5YearTarget'])
+        ten_year_target = float(scenario_parameters.iloc[end_year_target_index]['10YearTarget'])
+
         ## RUN_PARAM: Make sure the path to the resource data is set up properly here
         wind_path = os.path.join(r'..\test_data', '{}-2-wind.csv'.format(country_id))
         pv_path = os.path.join(r'..\test_data', '{}-2-pv.csv'.format(country_id))
 
         settlements_in_csv = calibrated_csv_path
 
-        settlements_out_csv = os.path.join(results_folder,
-                                           '{}-2-{}_{}_{}_{}_{}_{}.csv'.format(country_id, tier_index, productive_index,
-                                                                            grid_generation_index, pv_index,
-                                                                            grid_connection_index, rollout_index))
-        summary_csv = os.path.join(summary_folder,
-                                   '{}-2-{}_{}_{}_{}_{}_{}_summary.csv'.format(country_id, tier_index, productive_index,
-                                                                            grid_generation_index, pv_index,
-                                                                            grid_connection_index, rollout_index))
+        settlements_out_csv = os.path.join(results_folder, '{}-2-{}_{}_{}.csv'.format(country_id, tier_index, end_year_target_index, grid_connection_index))
+        summary_csv = os.path.join(summary_folder, '{}-2-{}_{}_{}_summary.csv'.format(country_id, tier_index, end_year_target_index, grid_connection_index))
 
         onsseter = SettlementProcessor(settlements_in_csv)
 
@@ -278,7 +277,7 @@ def scenario(specs_path, calibrated_csv_path, results_folder, summary_folder):
         # RUN_PARAM: One shall define here the years of analysis (excluding start year),
         # together with access targets per interval and timestep duration
         yearsofanalysis = [2025, 2030]
-        eleclimits = {2025: five_year_target, 2030: 1}
+        eleclimits = {2025: five_year_target, 2030: ten_year_target}
         time_steps = {2025: 5, 2030: 5}
 
         elements = ["1.Population", "2.New_Connections", "3.Capacity", "4.Investment"]
